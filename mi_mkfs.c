@@ -1,4 +1,5 @@
 #include "bloques.h"
+#include "ficheros_basico.h"
 
 int main(int argc, char **argv) {
 	
@@ -16,6 +17,18 @@ int main(int argc, char **argv) {
 		for (i = 0; i<nbloques; i++) {
 			bwrite(i, buffer);
 		}
+		
+		initSB(nbloques, argv[1]);
+		initMB(nbloques);
+		
+		leerSB();
+		
+		/* IMPRIMIMOS EL MAPA DE BITS */
+		bread(1, buffer);
+		for (i = 0; i < 30; i++) {
+			printf("%d\n", buffer[i%TB]);
+		}
+		
 		
 		bumount();
 	}
