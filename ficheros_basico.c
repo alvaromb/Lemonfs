@@ -61,8 +61,11 @@ int tamAI(unsigned int nbloques)
 }
 
 
+int initSB(unsigned int nbloques, char *nom_fs)
+{
 
-
+	int
+}
 
 
 
