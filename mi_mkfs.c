@@ -20,14 +20,30 @@ int main(int argc, char **argv) {
 		
 		initSB(nbloques, argv[1]);
 		initMB(nbloques);
+		initAI(nbloques);
 		
 		leerSB();
 		
-		/* IMPRIMIMOS EL MAPA DE BITS */
+		/* IMPRIMIMOS EL MAPA DE BITS
 		bread(1, buffer);
 		for (i = 0; i < 30; i++) {
 			printf("%d\n", buffer[i%TB]);
+		}*/
+		/* IMPRIMIMOS LOS INODOS */
+		struct inodo in;
+		int j;
+		for (j = 2; j < tamAI(nbloques)+3; j++) {
+			bread(j, buffer);
+			for (i = 0; i < 16; i++) {
+				if (in.pb_ind[0] == 0) {
+					break;
+				}
+				memcpy(&in, &buffer[(i%16)*64], sizeof(struct inodo));
+				printf("inodo: %d, siguiente: %d\n", i, in.pb_ind[0]);
+			}			
 		}
+		
+		/* FIN PRUEBAS */
 		
 		
 		bumount();

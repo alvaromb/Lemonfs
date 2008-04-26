@@ -153,6 +153,47 @@ int initMB(unsigned int nbloques)
 }
 
 
+int initAI(unsigned int nbloques)
+{
+	int n_inodos = nbloques/DIV_INODOS;
+	int b_inodos = tamMB(nbloques) + 1;
+	
+	unsigned char buffer[TB];
+	
+	struct inodo in;
+	in.tipo = LIBRE;
+	in.t_bytes = 0;
+	in.n_bloques = 0;
+	
+	int i;
+	for (i = 0; i < n_inodos; i++) {
+		in.f_creacion = time(NULL);
+		in.f_modificacion = time(NULL);
+		
+		if (i == (n_inodos - 1)) {
+			in.pb_ind[0] = 0;
+		}
+		else {
+			in.pb_ind[0] = i+1;
+		}
+		
+		memcpy(&buffer[(i%16)*64], &in, sizeof(struct inodo));
+		
+		if ((i%16 == 15) || (i == n_inodos - 1)) {
+			bwrite(b_inodos, buffer);
+			b_inodos++;
+		}
+	}
+	
+	/*in.tipo = DIRECTORIO;
+	in.t_bytes = 0;
+	in.n_bloques = 0;
+	in.f_creacion = time(NULL);
+	in.f_modificacion = time(NULL);
+	//reservar_inodo(in);	*/
+}
+
+
 
 
 
