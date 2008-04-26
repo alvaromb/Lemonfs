@@ -66,7 +66,7 @@ struct inodo
 /*
  * Funciones de consulta y apoyo.
  */
-void leerSB();
+int leerSB();
 
 /*
  * Funciones para calcular el tamaño en bloques.
