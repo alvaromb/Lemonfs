@@ -223,7 +223,7 @@ int pbit(unsigned int nbloque)
 
 
 
-int pbyte(unsigned int bloque)
+int pbyte(unsigned int nbloque)
 {
 
 	int i = nbloque / 8;
@@ -236,7 +236,45 @@ int pbyte(unsigned int bloque)
 int escribir_bit(unsigned int nbit, char valor)
 {
 
+	int num_bloq_mb = tamMB(nbit); /* Sirve para traducir el bloque */
 	
+	unsigned char buffer[TB];
+	if (bread(num_bloq_mb, buffer) < 0) {
+		printf("ERROR AL ESCRIBIR BIT (ficheros_basico.c -> escribir_bit(%d, %d)): Error de lectura en bread(%d, buffer)\n", nbit, valor, num_bloq_mb);
+		return (-1);
+	}
+	else if (DEBUG == 1) {
+		printf("DEBUG | (escribir_bit): Lectura del bloque %d completada correctamente", num_bloq_mb);
+	}
+	
+	int pos_bit = pbit(nbit);
+	int pos_byte = pbyte(nbit);
+	
+	unsigned char mascara = 128;
+	if (pos_bit > 0) {
+		mascara >>= pos_bit;
+	}
+	
+	if (valor == 1) {
+		buffer[pos_byte%TB] |= mascara;
+		printf("mascara: %d\n", mascara);
+		printf("buffer: %d\n", buffer[pos_byte%TB]);
+	}
+	else if (valor == 0) {
+		buffer[pos_byte%TB] &= ~mascara;
+		printf("mascara: %d\n", mascara);
+		printf("buffer: %d\n", buffer[pos_byte%TB]);
+	}
+	
+	if (bwrite(num_bloq_mb, buffer) < 0) {
+		printf("ERROR AL ESCRIBIR BIT (escribir_bit): Bloque %d, valor %d\n", num_bloq_mb, valor);
+		return (-1);
+	}
+	else if (DEBUG == 1) {
+		printf("DEBUG | (ficheros_basico.c -> escribir_bit(%d, %d)): Bit escrito correctamente.\n", nbit, valor);
+	}
+	
+	return (1);
 
 }
 

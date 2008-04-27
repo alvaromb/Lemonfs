@@ -24,12 +24,17 @@ int main(int argc, char **argv) {
 		
 		leerSB();
 		
-		/* IMPRIMIMOS EL MAPA DE BITS
+		escribir_bit(8, 1);
+		
+		/* IMPRIMIMOS EL MAPA DE BITS */
 		bread(1, buffer);
-		for (i = 0; i < 30; i++) {
-			printf("%d\n", buffer[i%TB]);
-		}*/
-		/* IMPRIMIMOS LOS INODOS */
+		for (i = 0; i < TB; i++) {
+			printf("%d ", buffer[i]);
+			if ((i != 0) && ((i % 20) == 0)) {
+				printf("\n");
+			}
+		}/**/
+		/* IMPRIMIMOS LOS INODOS 
 		struct inodo in;
 		int j;
 		for (j = 2; j < tamAI(nbloques)+3; j++) {
@@ -41,7 +46,7 @@ int main(int argc, char **argv) {
 				memcpy(&in, &buffer[(i%16)*64], sizeof(struct inodo));
 				printf("inodo: %d, siguiente: %d\n", i, in.pb_ind[0]);
 			}			
-		}
+		}*/
 		
 		/* FIN PRUEBAS */
 		
