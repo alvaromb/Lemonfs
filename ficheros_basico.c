@@ -47,6 +47,9 @@ int tamMB(unsigned int nbloques)
 	}
 	else {
 		tam_mb = tam_mb/(TB*8);
+		if (nbloques == 0) {
+			tam_mb++;
+		}
 	}
 	
 	return (tam_mb);
