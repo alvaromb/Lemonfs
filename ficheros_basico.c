@@ -321,6 +321,49 @@ int leer_bit(unsigned int nbit)
 
 
 
+int reservar_bloque()
+{
+
+	struct superbloque SB;
+	bread(0, (char *)&SB);
+	
+	if (SB.b_libres > 0) {
+		int bdatos = SB.primerb_dt;
+		int bloque = tamMB(bdatos);
+		int pos_byte = pbyte(bloque);
+		
+		unsigned char buffer[TB];
+		bread(bloque, buffer);
+		
+		while (buffer[pos_byte%TB] == 255){
+			pos_byte++;
+			
+			if ((pos_byte%TB) == 0) {
+				bloque++;
+				bread(bloque, buffer);
+				pos_byte++;
+			}
+		}
+		
+		unsigned char mascara = 128;
+		int i = 0;
+		while (buffer[pos_byte%TB] & mascara){
+			buffer[pos_byte%TB] <<= 1;
+			i++;
+		}
+		
+		pos_byte *= 8;
+		pos_byte += i;
+		
+		if (escribir_bit(pos_byte, 1) < 0) {
+			printf("value");
+		}
+	}
+
+}
+
+
+
 
 
 

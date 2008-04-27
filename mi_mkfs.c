@@ -24,17 +24,16 @@ int main(int argc, char **argv) {
 		
 		leerSB();
 		
-		escribir_bit(8, 1);
-		escribir_bit(0, 0);
-		
-		/* IMPRIMIMOS EL MAPA DE BITS */
+		/* INICIO PRUEBAS */
+				
+		/* IMPRIMIMOS EL MAPA DE BITS 
 		bread(1, buffer);
 		for (i = 0; i < TB; i++) {
 			printf("%d ", buffer[i]);
 			if ((i != 0) && ((i % 20) == 0)) {
 				printf("\n");
 			}
-		}/**/
+		}*/
 		/* IMPRIMIMOS LOS INODOS 
 		struct inodo in;
 		int j;
