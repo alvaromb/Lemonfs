@@ -1,8 +1,10 @@
 #include "ficheros_basico.h"
 
 
+
 int leerSB()
 {
+
 	struct superbloque SB;
 	
 	bread(0, (char *)&SB);
@@ -30,11 +32,14 @@ int leerSB()
 	printf("/***********************************/\n");
 	
 	return (1);
+	
 }
+
 
 
 int tamMB(unsigned int nbloques)
 {
+
 	int tam_mb = nbloques;
 	if ((tam_mb % (TB*8)) > 0) {
 		tam_mb = tam_mb/(TB*8);
@@ -45,11 +50,14 @@ int tamMB(unsigned int nbloques)
 	}
 	
 	return (tam_mb);
+	
 }
+
 
 
 int tamAI(unsigned int nbloques)
 {
+
 	int tam_in = (nbloques/DIV_INODOS)*64;
 	if ((tam_in % TB) == 0) {
 		tam_in = tam_in/TB;
@@ -60,11 +68,14 @@ int tamAI(unsigned int nbloques)
 	}
 	
 	return (tam_in);
+	
 }
+
 
 
 int initSB(unsigned int nbloques, char *nom_fs)
 {
+
 	struct superbloque sb;
 	int tam_mb = tamMB(nbloques);
 	int tam_ai = tamAI(nbloques);
@@ -89,11 +100,14 @@ int initSB(unsigned int nbloques, char *nom_fs)
 	}
 	
 	return (1);
+	
 }
+
 
 
 int initMB(unsigned int nbloques)
 {
+
 	unsigned char buffer[TB];
 	
 	int b_mb = tamMB(nbloques);
@@ -150,11 +164,14 @@ int initMB(unsigned int nbloques)
 			bwrite(bloq, buffer);
 		}
 	}
+	
 }
+
 
 
 int initAI(unsigned int nbloques)
 {
+
 	int n_inodos = nbloques/DIV_INODOS;
 	int b_inodos = tamMB(nbloques) + 1;
 	
@@ -191,6 +208,36 @@ int initAI(unsigned int nbloques)
 	in.f_creacion = time(NULL);
 	in.f_modificacion = time(NULL);
 	//reservar_inodo(in);	*/
+	
+}
+
+
+
+int pbit(unsigned int nbloque) 
+{
+
+	int i = nbloque % 8;
+	return (i);
+
+}
+
+
+
+int pbyte(unsigned int bloque)
+{
+
+	int i = nbloque / 8;
+	return (i);
+
+}
+
+
+
+int escribir_bit(unsigned int nbit, char valor)
+{
+
+	
+
 }
 
 
