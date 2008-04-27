@@ -283,6 +283,44 @@ int escribir_bit(unsigned int nbit, char valor)
 
 
 
+int leer_bit(unsigned int nbit)
+{
+
+	int n_bloque = tamMB(nbit);
+	
+	unsigned char buffer[TB];
+	if (bread(n_bloque, buffer) < 0) {
+		printf("ERROR AL LEER BIT (ficheros_basico.c -> leer_bit(%d)): Error en bread(%d, buffer)\n", nbit, n_bloque);
+		return (-1);
+	}
+	
+	int pos_bit = pbit(nbit);
+	int pos_byte = pbyte(nbit);
+	
+	unsigned char mascara = 128;
+	
+	if (buffer[pos_byte%TB] == 0) {
+		return (0);
+	}
+	else if (buffer[pos_byte%TB] == 255) {
+		return (1);
+	}
+	else {
+		if (pos_bit > 0) {
+			mascara >>= pos_bit;
+		}
+		if (buffer[pos_byte%TB] & mascara) {
+			return (1);
+		}
+		else {
+			return (0);
+		}
+	}
+
+}
+
+
+
 
 
 
