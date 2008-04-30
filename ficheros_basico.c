@@ -378,7 +378,7 @@ int liberar_bloque(unsigned int bloque)
 
 	if (bloque >= 0) {
 		if (leer_bit(bloque) == 1) {
-			if (escribir_bit(bloque, 0) > 0) {
+			if (escribir_bit(bloque, 0) < 0) {
 				printf("ERROR AL LIBERAR BLOQUE (ficheros_basico.c -> liberar_bloque(%d)): Error al escribir_bit(%d, 0)\n", bloque, bloque);
 				return (-1);
 			}
