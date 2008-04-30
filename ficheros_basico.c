@@ -408,6 +408,136 @@ int liberar_bloque(unsigned int bloque)
 
 
 
+int escribir_inodo(struct inodo in, unsigned int ninodo)
+{
+
+	struct superbloque SB;
+	if (bread(0, (char *)&SB) < 0) {
+		printf("ERROR AL LEER SB (ficheros_basico.c -> escribir_inodo(in, %d)): Error al bread(0, SB)\n", ninodo);
+		return (-1);
+	}
+	
+	if (SB.i_libres > 0) {
+		if ((ninodo < 0) || (ninodo <= SB.n_inodos)) {
+			unsigned int b_inodo = ninodo/16;
+			b_inodo += SB.primerb_ai;
+			
+			unsigned char buffer[TB];
+			if (bread(b_inodo, buffer) < 0) {
+				printf("ERROR (ficheros_basico.c -> escribir_inodo(in, %d)): Error en bread(%d, buffer)\n", ninodo, b_inodo);
+				return (-1);
+			}
+			
+			int byte_inodo = (ninodo*64)%TB;
+			if (memcpy(&buffer[byte_inodo], &in, sizeof(struct inodo)) < 0) {
+				printf("ERROR (ficheros_basico.c -> escribir_inodo(in, %d)): Error en memcpy(buffer[%d], in, 64)\n", ninodo, byte_inodo);
+				return (-1);
+			}
+			
+			if (bwrite(b_inodo, buffer) < 0) {
+				printf("ERROR (ficheros_basico.c -> escribir_inodo(in, %d)): Error en bwrite(%d, buffer)\n", ninodo, b_inodo);
+				return (-1);
+			}
+			else if (DEBUG == 1) {
+				printf("DEBUG (ficheros_basico.c -> escribir_inodo(in, %d)): Inodo escrito con éxito!\n", ninodo);
+			}
+			
+			return (1);
+		}
+		else {
+			printf("Info (ficheros_basico.c -> escribir_inodo(in, %d)): Upps! parece que el inodo %d no cabe en nuestro array de %d inodos.\n", ninodo, ninodo, SB.n_inodos);
+			return (-1); /* DUDA SI ESTO ES NECESARIO */
+		}
+	}
+	else {
+		printf("Info (ficheros_basico.c -> escribir_inodo(in, %d)): Upps! parece que no hay más inodos libres.\n");
+		return (-1); /* DUDA SI ESTO ES NECESARIO */
+	}
+
+}
+
+
+
+int leer_inodo(struct inodo *in, unsigned int ninodo)
+{
+
+	struct superbloque SB;
+	if (bread(0, (char *)&SB) < 0) {
+		printf("ERROR AL LEER EL SB (ficheros_basico.c -> leer_inodo(in, %d)): Error al leer el superbloque\n", ninodo);
+		return (-1);
+	}
+	
+	if ((ninodo <= SB.n_inodos) && (ninodo >= 0)) {
+		unsigned char buffer[TB];
+		unsigned int b_inodo = ninodo/16;
+		b_inodo += SB.primerb_ai;
+		
+		if (bread(b_inodo, buffer) < 0) {
+			printf("ERROR (ficheros_basico.c -> leer_inodo(in, %d)): Error al leer el bloque %d\n", ninodo, b_inodo);
+			return (-1);
+		}
+		
+		unsigned int byte_inodo = (ninodo*64)%TB;
+		if (memcpy(in, &buffer[byte_inodo], sizeof(struct inodo)) < 0) {
+			printf("ERROR (ficheros_basico.c -> leer_inodo(in, %d)): Error al hacer memcpy(byte_inodo: %d)\n", ninodo, byte_inodo);
+			return (-1);
+		}
+		else if (DEBUG == 1) {
+			printf("DEBUG (ficheros_basico.c -> leer_inodo(in, %d)): Inodo leído con éxito\n", ninodo);
+		}
+		
+		return (1);
+	}
+	else {
+		printf("Info (ficheros_basico.c -> leer_inodo(in, %d)): Upps! parece que el numero de inodo es muy grande o menor que 0.\n", ninodo);
+		return (-1); /* DUDA SI ESTO ES NECESARIO */
+	}
+
+}
+
+
+
+int reservar_inodo(struct inodo in)
+{
+
+	struct superbloque SB;
+	if (bread(0, (char *)&SB) < 0) {
+		printf("ERROR (ficheros_basico.c -> reservar_inodo(in)): Error al leer el superbloque\n");
+		return (-1);
+	}
+	
+	if (SB.i_libres > 0) {
+		int inodo_libre = SB.ni_libre;
+		struct inodo in_libre;
+		
+		if (leer_inodo(&in_libre, inodo_libre) < 0) {
+			printf("ERROR (ficheros_basico.c -> reservar_inodo(in)): Error al leer el primer inodo libre\n");
+			return (-1);
+		}
+		
+		if (escribir_inodo(in, inodo_libre) < 0) {
+			printf("ERROR (ficheros_basico.c -> reservar_inodo(in)): Error al escribir el inodo\n");
+			return (-1);
+		}
+		
+		SB.ni_libre = in_libre.pb_ind[0];
+		SB.i_libres--;
+		if (bwrite(0, (char *)&SB) < 0) {
+			printf("ERROR (ficheros_basico.c -> reservar_inodo(in)): Error al guardar el superbloque\n");
+			return (-1);
+		}
+		
+		return (inodo_libre);
+	}
+	else {
+		printf("Info (ficheros_basico.c -> reservar_inodo(in)): No quedan inodos libres\n");
+		return (-1); /* DUDA SI ESTO ESTA BIEN AQUI */
+	}
+
+}
+
+
+
 
 
 

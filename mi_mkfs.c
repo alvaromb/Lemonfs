@@ -49,9 +49,32 @@ int main(int argc, char **argv) {
 		}*/
 		
 		/* PRUEBAS CON ESCRITURA-LECTURA-RESERVA DE BLOQUES */
-		int rb = reservar_bloque();
-		printf("rb: %d\n", rb);
-		liberar_bloque(rb);
+		/*int rb;
+		int j;
+		int puta;
+		for (j = 0; j < 16000; j++) {
+			rb = reservar_bloque();
+			if (i == 1) {
+				puta = rb;
+			}
+			printf("rb: %d\n", rb);
+			//sleep(1);
+		}
+		printf("PUTA: %d\n", puta);*/
+		
+		/* PRUEBAS CON INODOS */
+		struct superbloque SB;
+		bread(0, (char *)&SB);
+		struct inodo in;
+		int perra;
+		int j;
+		for (j = 0; j < SB.i_libres; j++) {
+			perra = reservar_inodo(in);
+			printf("perra: %d\n", perra);
+		}
+		
+		
+			
 		/* FIN PRUEBAS */
 		
 		
