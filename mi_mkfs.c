@@ -48,8 +48,15 @@ int main(int argc, char **argv) {
 			}			
 		}*/
 		
+		/* PRUEBAS CON ESCRITURA-LECTURA-RESERVA DE BLOQUES */
+		int rb = reservar_bloque();
+		printf("rb: %d\n", rb);
+		//liberar_bloque(rb);
+		printf("eb: %d\n", escribir_bit(rb, 0));
 		/* FIN PRUEBAS */
 		
+		
+		leerSB();
 		
 		bumount();
 	}

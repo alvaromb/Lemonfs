@@ -260,13 +260,9 @@ int escribir_bit(unsigned int nbit, char valor)
 	
 	if (valor == 1) {
 		buffer[pos_byte%TB] |= mascara;
-		printf("mascara: %d\n", mascara);
-		printf("buffer: %d\n", buffer[pos_byte%TB]);
 	}
 	else if (valor == 0) {
 		buffer[pos_byte%TB] &= ~mascara;
-		printf("mascara: %d\n", mascara);
-		printf("buffer: %d\n", buffer[pos_byte%TB]);
 	}
 	
 	if (bwrite(num_bloq_mb, buffer) < 0) {
@@ -356,8 +352,56 @@ int reservar_bloque()
 		pos_byte += i;
 		
 		if (escribir_bit(pos_byte, 1) < 0) {
-			printf("value");
+			printf("ERROR AL RESERVAR BLOQUE (reservar_bloque()): Error al escribir_bit(%d, 1)\n", pos_byte);
+			return (-1);
 		}
+		
+		SB.b_libres--;
+		if (bwrite(0, (char *)&SB) < 0) {
+			printf("ERROR AL ACTUALIZAR EL SUPERBLOQUE (ficheros_basico.c -> reservar_bloque()): Error al bwrite(0, SB)\n");
+			return (-1);
+		}
+		
+		return (pos_byte);
+	}
+	else {
+		printf("ERROR, NO HAY BLOQUES LIBRES\n");
+		return (-1);
+	}
+
+}
+
+
+
+int liberar_bloque(unsigned int bloque)
+{
+
+	if (bloque >= 0) {
+		if (leer_bit(bloque) == 1) {
+			if (escribir_bit(bloque, 0) > 0) {
+				printf("ERROR AL LIBERAR BLOQUE (ficheros_basico.c -> liberar_bloque(%d)): Error al escribir_bit(%d, 0)\n", bloque, bloque);
+				return (-1);
+			}
+			
+			struct superbloque SB;
+			if (bread(0, (char *)&SB) < 0) {
+				printf("ERROR AL GUARDAR SUPERBLOQUE (ficheros_basico.c -> liberar_bloque(&d)): Error al bread(0, SB)\n", bloque);
+				return (-1);
+			}
+			
+			if ((SB.n_bloques - SB.ultimob_ai) > SB.b_libres) {
+				SB.b_libres++;
+				bwrite(0, (char *)&SB);
+			}
+		}
+		else {
+			printf("Info (liberar_bloque): El bloque %d que quieres liberar está libre.\n", bloque);
+		}
+		return (1);
+	}
+	else {
+		printf("ERROR (liberar_bloque(%d)): Valor de bloque negativo.\n", bloque);
+		return (-1);
 	}
 
 }
