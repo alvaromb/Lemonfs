@@ -538,6 +538,73 @@ int reservar_inodo(struct inodo in)
 
 
 
+int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
+{
+
+	struct inodo in;
+	if (leer_inodo(&in, ninodo) < 0) {
+		printf("ERORR (ficheros_basico.c -> liberar_bloques(%d, %d)): Error al leer el inodo %d\n", ninodo, nbytes, ninodo);
+		return (-1);
+	}
+	
+	if (in.tipo != LIBRE) {
+		int bloques_liberados = 0;
+		int n_asignados = in.n_bloques;
+		int pos_inicial;
+		
+		if (nbytes%TB > 0) {
+			pos_inicial = (nbytes/TB)+1;
+		}
+		else {
+			pos_inicial = nbytes/TB;
+		}
+		
+		if (n_asignados > 0) {
+		
+			/* Eliminamos los bloques directos */
+			int i;
+			if ((0 <= pos_inicial) && (pos_inicial < TAM_PDIR)) {
+			
+				for (i = pos_inicial; i < TAM_PDIR; i++) {
+					if (in.pb_dir[i] > 0) {
+						if (liberar_bloque(in.pb_dir[i]) < 0) {
+							printf("ERROR (ficheros_basico.c -> liberar_bloques(%d, %d)): Error al liberar el bloque %d\n", ninodo, nbytes, in.pb_dir[i]);
+							return (-1);
+						}
+						else {
+							in.pb_dir[i] = 0;
+							bloques_liberados++;
+							in.n_bloques--;
+						}
+					}
+				}
+				pos_inicial = i; /* Avanzamos la posición inicial */
+			}
+			
+			
+			/* Eliminamos los bloques indirectos */
+			int j;
+			for (j = 0; j < TAM_PIND; j++) {
+				/* LIBERAMOS BLOQUES INDIRECTOS */
+			}
+			
+			
+		}
+		else {
+			printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): El inodo %d no tiene bloques asignados\n", ninodo, nbytes, ninodo);
+			return (-1); /* DUDA SI ESTO HAY QUE PONERLO */
+		}
+		
+	}
+	else {
+		printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): El inodo %d está libre\n", ninodo, nbytes, ninodo);
+		return (-1); /* DUDA SI ESTO HAY QUE PONERLO */
+	}
+
+}
+
+
+
 
 
 
