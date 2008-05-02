@@ -605,10 +605,80 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 
 
 
-int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nive)
+int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, unsigned int puntero, unsigned int nbloque)
 {
 
+	/* Caso general */
+	if (nivel < puntero) {
 	
+		/* Realizamos el cálculo del bloque a leer */
+		unsigned int bufferp[TP];
+		if (bread(pos_inicial, bufferp) < 0) {
+			printf("ERROR (ficheros_basico.c -> liberar_bloques_indirectos(%d, %d, %d, %d)): Error al leer el bloque %d\n", pos_inicial, nivel, puntero, nbloque, nbloque);
+			return (-1);
+		}		
+		
+		switch (nivel){
+			case 0:
+				if ((TAM_PDIR <= pos_inicial) && (pos inicial < (TP+TAM_PDIR))) {
+					nbloque -= TAM_PDIR;
+					pos_inicial = nbloque;
+				}
+				else if (((TP+TAM_PDIR) <= pos_inicial) && (pos inicial < (TAM_PDIR+TP+(TP*TP)))) {
+					nbloque -= (TP+TAM_PDIR);
+					pos_inicial = nbloque/TP;
+				}
+				else if (((TAM_PDIR+TP+(TP*TP)) <= pos_inicial) && (pos_incial < (TAM_PDIR+TP+(TP*TP)+(TP*TP*TP)))) {
+					nbloque -= ((TP*TP)+TP+TAM_PDIR);
+					pos_inicial = nbloque/(TP*TP);
+				}
+				
+				break;
+				
+				
+			case 1:
+				if () {
+					
+				}
+				else if () {
+					
+				}
+				else if () {
+					
+				}				
+				
+				break;
+				
+				
+			case 2:
+				if () {
+					
+				}
+				else if () {
+					
+				}
+				else if () {
+					
+				}
+				
+				break;
+				
+				
+			default:
+				printf("Info (ficheros_basico.c -> liberar_bloques_indirectos(%d, %d, %d, %d)): Switch en default\n", pos_inicial, nivel, puntero, nbloque);
+				break;
+		}
+		
+		/* Llamada recursiva */
+		int liberados = liberar_bloques_indirectos(bufferp[pos_inicial], ++nivel, puntero, nbloque);
+
+		/* Si hemos liberado 256 bloques, liberamos el bloque de punteros */
+	}
+	
+	/* Caso básico */
+	else if (nivel == puntero) {
+		
+	}
 
 }
 
