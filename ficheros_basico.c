@@ -605,6 +605,15 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 
 
 
+int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nive)
+{
+
+	
+
+}
+
+
+
 
 
 

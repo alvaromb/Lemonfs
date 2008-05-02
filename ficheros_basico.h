@@ -117,7 +117,7 @@ int reservar_inodo(struct inodo in);
 
 int liberar_bloques(unsigned int ninodo, unsigned int nbytes);
 
-int liberar_bloques_indirectos(unsigned int nbloque, unsigned int npuntero, unsigned int pos_inicial);
+int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel);
 
 int liberar_inodo(unsigned int ninodo);
 
