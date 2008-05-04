@@ -96,9 +96,10 @@ int initSB(unsigned int nbloques, char *nom_fs)
 	sb.b_libres = sb.ultimob_dt - sb.ultimob_ai;
 	sb.i_libres = n_inodos;
 	sb.n_inodos = n_inodos;
+	sb.n_bloques = nbloques;
 	
 	if (bwrite(0, &sb) < 0) {
-		printf("ERROR AL INICIALIZAR EL SB (ficheros_basico.c -> initSB(%d, %s)): Error en bwrite(%d, &sb).", nbloques, nom_fs, 0);
+		printf("ERROR AL INICIALIZAR EL SB (ficheros_basico.c -> initSB(%d, %s)): Error en bwrite(%d, &sb).\n", nbloques, nom_fs, 0);
 		return (-1);
 	}
 	
@@ -247,7 +248,7 @@ int escribir_bit(unsigned int nbit, char valor)
 		return (-1);
 	}
 	else if (DEBUG == 1) {
-		printf("DEBUG | (escribir_bit): Lectura del bloque %d completada correctamente", num_bloq_mb);
+		printf("DEBUG | (escribir_bit): Lectura del bloque %d completada correctamente\n", num_bloq_mb);
 	}
 	
 	int pos_bit = pbit(nbit);
@@ -395,13 +396,13 @@ int liberar_bloque(unsigned int bloque)
 			}
 		}
 		else {
-			printf("Info (liberar_bloque): El bloque %d que quieres liberar está libre.\n", bloque);
+			printf("Info (ficheros_basico.c -> liberar_bloque): El bloque %d que quieres liberar está libre.\n", bloque);
 		}
 		return (1);
 	}
 	else {
-		printf("ERROR (liberar_bloque(%d)): Valor de bloque negativo.\n", bloque);
-		return (-1);
+		printf("Info (ficheros_basico.c -> liberar_bloque(%d)): Valor de bloque negativo.\n", bloque);
+		return (1); /* PROVISIONAL, ANALIZAR SI ES ÉXITO Ó FRACASO QUE EL BLOQUE DESTINO NO EXISTA */
 	}
 
 }
@@ -549,7 +550,7 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 	
 	if (in.tipo != LIBRE) {
 		int bloques_liberados = 0;
-		int n_asignados = in.n_bloques;
+		int n_asignados = in.n_bloques; /* ESTO ES POSIBLE QUE SOBRE */
 		int pos_inicial;
 		
 		if (nbytes%TB > 0) {
@@ -586,6 +587,19 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 			int j;
 			for (j = 0; j < TAM_PIND; j++) {
 				/* LIBERAMOS BLOQUES INDIRECTOS */
+				int liberados = liberar_bloques_indirectos(pos_inicial, 1, j, pos_inicial);
+				
+				if (liberados == TP) {
+					if (liberar_bloque(in.pb_ind[j]) < 0) {
+						printf("ERROR (ficheros_basico.c -> liberar_bloques(%d, %d)): Error al liberar el bloque %d del puntero indirecto %d\n", ninodo, nbytes, in.pb_ind[j], j);
+						return (-1);
+					}
+					
+					in.pb_ind[j] = 0;
+					/* FALTA ACTUALIZAR EL INODO, BLOQUES LIBERADOS, ETC... */
+				}
+				
+				pos_inicial = 0; /* INICIALIZAMOS POS_INICIAL PARA IR BORRANDO DESDE EL PRINCIPIO */
 			}
 			
 			
@@ -665,12 +679,12 @@ int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, uns
 			if ((n_max == nivel) || (liberados == TP)) {
 				if (liberar_bloque(bufferp[pos_inicial]) < 0) {
 					printf("ERROR (ficheros_basico.c -> liberar_bloques_indirectos(%d, %d, %d, %d)): Error al liberar el bloque %d en el caso general\n", pos_inicial, nivel, n_max, nbloque, pos_inicial);
+					return (-1);
 				}
 			}
 			
-			/* Para borrar los bloques que sigue, inicializamos pos_inicial 
-			pos_inicial = 0;*/
 			/* CAMBIAR NBLOQUE CREO QUE LO SOLUCIONA TODO!!! */
+			nbloque = 0;
 		}
 		
 		/* Devolvemos los bloques liberados */

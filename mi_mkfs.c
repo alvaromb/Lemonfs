@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
 				printf("\n");
 			}
 		}*/
+		
 		/* IMPRIMIMOS LOS INODOS 
 		struct inodo in;
 		int j;
@@ -63,7 +64,7 @@ int main(int argc, char **argv) {
 		printf("PUTA: %d\n", puta);*/
 		
 		/* PRUEBAS CON INODOS */
-		struct superbloque SB;
+		/*struct superbloque SB;
 		bread(0, (char *)&SB);
 		struct inodo in;
 		int perra;
@@ -71,13 +72,68 @@ int main(int argc, char **argv) {
 		for (j = 0; j < SB.i_libres; j++) {
 			perra = reservar_inodo(in);
 			printf("perra: %d\n", perra);
-		}
+		}*/
 		
+		/* PRUEBAS CON LIBERAR_BLOQUES E INODOS */
+		struct inodo in;
+		in.tipo = DIRECTORIO;
+		in.n_bloques = 20; /* SOLO PARA QUE PASE EL PRIMER IF DE LIBERAR BLOQUES */
+		
+		/* Punteros directos */
+		unsigned int bufferp[TP];
+		int j;
+		for (j = 0; j < TAM_PDIR; j++) {
+			in.pb_dir[j] = reservar_bloque();
+		}
+		printf("Punteros directos listos\n");
+		
+		/* Puntero indirecto 0 */
+		in.pb_ind[0] = reservar_bloque();
+		for (j = 0; j < TP; j++) {
+			bufferp[j] = reservar_bloque();
+		}
+		bwrite(in.pb_ind[0], bufferp);
+		printf("Puntero indirecto 0 listo\n");
+		
+		/* Puntero indirecto 1 */
+		unsigned int bufferpp[TP];
+		in.pb_ind[1] = reservar_bloque();
+		for (j = 0; j < TP; j++) {
+							
+			int k;
+			for (k = 0; k < TP; k++) {
+				bufferpp[k] = reservar_bloque();
+			}
+			bufferp[j] = reservar_bloque();
+			bwrite(bufferp[j], bufferpp);
+		}
+		bwrite(in.pb_ind[1], bufferp);
+		
+		/* Puntero indirecto 2 
+		unsigned int bufferppp[TP];
+		in.pb_ind[2] = reservar_bloque();
+		for (j = 0; j < TP; j++) {
+			int k;
+			for (k = 0; k < TP; k++) {
+					int l;
+					for (l = 0; l < TP; l++) {
+						bufferppp[l] = reservar_bloque();
+					}
+					bufferpp[k] = reservar_bloque();
+					bwrite(bufferpp[k], bufferppp);
+			}
+			bufferp[j] = reservar_bloque();
+			bwrite(bufferp[j], bufferpp);
+		}
+		bwrite(in.pb_ind[2], bufferp);*/
+		
+		int perra = reservar_inodo(in); /* No cuenta como bloque reservado */
+		printf("PERRA: %d\n", perra);
+		
+		liberar_bloques(0, 10000);
 		
 			
 		/* FIN PRUEBAS */
-		
-		
 		leerSB();
 		
 		bumount();
