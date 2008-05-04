@@ -128,14 +128,24 @@ int main(int argc, char **argv) {
 		bwrite(in.pb_ind[2], bufferp);*/
 		
 		int perra = reservar_inodo(in); /* No cuenta como bloque reservado */
-		printf("PERRA: %d\n", perra);
+		printf("PERRA: %d\n\n", perra);
 		
 		liberar_bloques(0, 10000);
 		
+		/* Leemos el inodo 
+		leer_inodo(&in, 0);
+		int k;
+		for (k = 0; k < 3 ; k++) {
+			printf("dir: %d\n", in.pb_dir[k]);
+		}
+		for (k = 0; k < TAM_PIND; k++) {
+			printf("ind: %d\n", in.pb_ind[k]);
+		}*/
+		
 			
 		/* FIN PRUEBAS */
+		printf("\n\n");
 		leerSB();
-		
 		bumount();
 	}
 	
