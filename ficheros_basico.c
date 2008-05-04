@@ -601,11 +601,11 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 			printf("    Eliminando bloques indirectos...\n");
 			int n_max;
 			int j;
-			for (j = 0; j < 2; j++) {
+			for (j = 0; j < 2; j++) { /* CAMBIAR Y ADAPTAR ESTO!!!! */
 				if ((0 < in.pb_ind[j]) && (in.pb_ind[j] < SB.n_bloques)) {
 				
 					/* LIBERAMOS BLOQUES INDIRECTOS */
-					printf("    Llamada recursiva (pos_inicial: %d, 1, j: %d, pos_inicial: %d)\n", in.pb_ind[j], j, pos_inicial);
+					printf("    Llamada recursiva (pos_inicial: %d, 1, j: %d, pos_inicial(var): %d)\n", in.pb_ind[j], j, pos_inicial);
 					n_max = j+1;
 					int liberados = liberar_bloques_indirectos(in.pb_ind[j], 1, n_max, pos_inicial);
 					printf("    Liberados: %d\n", liberados);
@@ -656,6 +656,7 @@ int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, uns
 			return (-1);
 		}		
 		printf("        Nivel inicio: %d / n_max: %d / pos_inicial: %d / nbloque: %d\n", nivel, n_max, pos_inicial, nbloque);
+		
 		switch (nivel) {
 			case 1:
 				if (n_max == 1) {
@@ -680,19 +681,27 @@ int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, uns
 				else if (n_max == 3) {
 					nbloque = nbloque%(TP*TP);
 					pos_inicial = nbloque/TP;
-				}		
-				
+				}	
+								
 				break;
 				
 			
 			case 3:
 				pos_inicial = nbloque%TP;
+				
 				break;
 				
 				
 			default:
 				printf("Info (ficheros_basico.c -> liberar_bloques_indirectos(%d, %d, %d, %d)): Switch en default \n", pos_inicial, nivel, n_max, nbloque);
 				break;
+		}
+		
+		printf("        Cálculo switch(%d): nbloque = %d / pos_inicial = %d\n", nivel, nbloque, pos_inicial);
+		if (pos_inicial == 16777214) {
+			printf("        NBLOQUE ES NEGATIVO\n");
+			nbloque = 0;
+			pos_inicial = 0;
 		}
 		
 		printf("        Cálculo switch(%d): nbloque = %d / pos_inicial = %d\n", nivel, nbloque, pos_inicial);
