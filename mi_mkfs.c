@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
 		int perra = reservar_inodo(in); /* No cuenta como bloque reservado */
 		printf("PERRA: %d\n\n", perra);
 		
-		liberar_bloques(0, 10000);
+		liberar_bloques(0, 5000);
 		
 		/* Leemos el inodo 
 		leer_inodo(&in, 0);
