@@ -645,7 +645,7 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 
 
 
-int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, unsigned int n_max, unsigned int nbloque)
+int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, unsigned int n_max, int nbloque)
 {
 
 	if (nivel <= n_max) {
@@ -697,8 +697,10 @@ int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, uns
 				break;
 		}
 		
+		
+		/* REHACER ESTA PUTA CUTRADA */
 		printf("        Cálculo switch(%d): nbloque = %d / pos_inicial = %d\n", nivel, nbloque, pos_inicial);
-		if (pos_inicial == 16777214) {
+		if (nbloque < 0) {
 			printf("        NBLOQUE ES NEGATIVO\n");
 			nbloque = 0;
 			pos_inicial = 0;
