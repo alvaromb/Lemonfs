@@ -78,6 +78,11 @@ int main(int argc, char **argv) {
 		struct inodo in;
 		in.tipo = DIRECTORIO;
 		in.n_bloques = 20; 
+		int pp;
+		for (pp = 0; pp < TAM_PIND; pp++) {
+			in.pb_ind[pp] = 0;
+		}
+		
 		
 		/* Punteros directos */
 		unsigned int bufferp[TP];

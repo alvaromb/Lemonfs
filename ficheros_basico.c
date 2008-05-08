@@ -600,7 +600,8 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 			int j;
 			for (j = 0; j < TAM_PIND; j++) { /* CAMBIAR Y ADAPTAR ESTO!!!! */
 				if ((0 < in.pb_ind[j]) && (in.pb_ind[j] < SB.n_bloques) && (leer_bit(in.pb_ind[j]) > 0)) {
-				
+					printf("in.pb_ind[%d] = %d\n", j, in.pb_ind[j]);
+					sleep(5);
 					n_max = j+1;
 					int liberados = liberar_bloques_indirectos(in.pb_ind[j], 1, n_max, pos_inicial);
 					
@@ -615,7 +616,7 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 					
 					pos_inicial = 0;
 				}
-				else {
+				else { /* QUIZÁS ESTO SOBRE TAMBIÉN */
 					printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): No hay puntero indirecto (fuera de rango) %d\n", ninodo, nbytes, j);
 				}
 			}			
