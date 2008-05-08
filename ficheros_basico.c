@@ -546,7 +546,7 @@ int reservar_inodo(struct inodo in)
 
 int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 {
-	printf(" /- DEBUG liberar_bloques\n");
+
 	struct inodo in;
 	if (leer_inodo(&in, ninodo) < 0) {
 		printf("ERORR (ficheros_basico.c -> liberar_bloques(%d, %d)): Error al leer el inodo %d\n", ninodo, nbytes, ninodo);
@@ -571,15 +571,13 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 			pos_inicial = nbytes/TB;
 		}
 		
-		printf("    pos_inicial %d\n", pos_inicial);
-		
 		if (n_asignados > 0) { /* ESTO ES POSIBLE QUE SOBRE */
 		
 			/* Eliminamos los bloques directos */
 			int i;
 			if ((0 <= pos_inicial) && (pos_inicial < TAM_PDIR)) {
-				printf("    Eliminando bloques indirectos...");
 				for (i = pos_inicial; i < TAM_PDIR; i++) {
+				
 					if (in.pb_dir[i] > 0) {
 						if (liberar_bloque(in.pb_dir[i]) < 0) {
 							printf("ERROR (ficheros_basico.c -> liberar_bloques(%d, %d)): Error al liberar el bloque %d\n", ninodo, nbytes, in.pb_dir[i]);
@@ -591,43 +589,36 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 							in.n_bloques--;
 						}
 					}
+					
 				}
 				pos_inicial = i; /* Avanzamos la posición inicial */
-				printf("Listo (pos_inicial: %d)\n", pos_inicial);
 			}
 			
 			
 			/* Eliminamos los bloques indirectos */
-			printf("    Eliminando bloques indirectos...\n");
 			int n_max;
 			int j;
 			for (j = 0; j < 2; j++) { /* CAMBIAR Y ADAPTAR ESTO!!!! */
-				if ((0 < in.pb_ind[j]) && (in.pb_ind[j] < SB.n_bloques)) {
+				if ((0 < in.pb_ind[j]) && (in.pb_ind[j] < SB.n_bloques) && (leer_bit(in.pb_ind[j]) > 0)) {
 				
-					/* LIBERAMOS BLOQUES INDIRECTOS */
-					printf("    Llamada recursiva (pos_inicial: %d, 1, j: %d, pos_inicial(var): %d)\n", in.pb_ind[j], j, pos_inicial);
 					n_max = j+1;
 					int liberados = liberar_bloques_indirectos(in.pb_ind[j], 1, n_max, pos_inicial);
-					printf("    Liberados: %d\n", liberados);
+					
 					if (liberados == TP) {
 						if (liberar_bloque(in.pb_ind[j]) < 0) {
 							printf("ERROR (ficheros_basico.c -> liberar_bloques(%d, %d)): Error al liberar el bloque %d del puntero indirecto %d\n", ninodo, nbytes, in.pb_ind[j], j);
 							return (-1);
 						}
-						
-						printf("    Hemos liberado el bloque %d del puntero %d / liberados: %d\n", in.pb_ind[j], j, liberados);
 						in.pb_ind[j] = 0;
 						/* FALTA ACTUALIZAR EL INODO, BLOQUES LIBERADOS, ETC... */
 					}
 					
-					pos_inicial = 0; /* INICIALIZAMOS POS_INICIAL PARA IR BORRANDO DESDE EL PRINCIPIO */
+					pos_inicial = 0;
 				}
 				else {
 					printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): No hay puntero indirecto (fuera de rango) %d\n", ninodo, nbytes, j);
 				}
-			}
-			printf("    Listo\n");
-			
+			}			
 			
 		}
 		else {
@@ -640,7 +631,8 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 		printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): El inodo %d está libre\n", ninodo, nbytes, ninodo);
 		return (-1); /* DUDA SI ESTO HAY QUE PONERLO */
 	}
-	printf(" /- DEBUG TERMINADO\n");
+
+	return (1);
 }
 
 
@@ -654,8 +646,7 @@ int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, uns
 		if (bread(pos_inicial, bufferp) < 0) {
 			printf("ERROR (ficheros_basico.c -> liberar_bloques_indirectos(%d, %d, %d, %d)): Error al leer el bloque %d en el caso general\n", pos_inicial, nivel, n_max, nbloque, nbloque);
 			return (-1);
-		}		
-		printf("        Nivel inicio: %d / n_max: %d / pos_inicial: %d / nbloque: %d\n", nivel, n_max, pos_inicial, nbloque);
+		}
 		
 		switch (nivel) {
 			case 1:
@@ -697,30 +688,23 @@ int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, uns
 				break;
 		}
 		
-		
-		/* REHACER ESTA PUTA CUTRADA */
-		printf("        Cálculo switch(%d): nbloque = %d / pos_inicial = %d\n", nivel, nbloque, pos_inicial);
+		/* Si el cálculo es negativo, inicializamos */
 		if (nbloque < 0) {
-			printf("        NBLOQUE ES NEGATIVO\n");
 			nbloque = 0;
 			pos_inicial = 0;
 		}
-		
-		printf("        Cálculo switch(%d): nbloque = %d / pos_inicial = %d\n", nivel, nbloque, pos_inicial);
 		
 		/* Recorremos el resto del bloque */
 		int b_liberados = 0;
 		int i;
 		for (i = nbloque; i < TP; i++) {
+		
 			nivel++;
-			printf("        Llamada liberar_bloques_indirectos(%d, %d, %d, %d)    -->", bufferp[i], nivel, n_max, nbloque);
 			int v_devuelto = liberar_bloques_indirectos(bufferp[i], nivel, n_max, nbloque);
 			nivel--;
-			printf("        Fuera de llamada recursiva (n_max: %d / nivel: %d / liberados: %d / i: %d)\n", n_max, nivel, b_liberados, i);
-			//sleep(1);
+			
 			/* Si hemos liberado 256 bloques, liberamos el bloque de punteros */
 			if ((n_max == nivel) || (v_devuelto == TP)) {
-				printf("        Vamos a liberar bloques (n_max: %d / nivel: %d / liberados: %d / a liberar: %d / v_devuelto: %d)\n\n", n_max, nivel, b_liberados, bufferp[i], v_devuelto);
 				if (liberar_bloque(bufferp[i]) < 0) {
 					printf("ERROR (ficheros_basico.c -> liberar_bloques_indirectos(%d, %d, %d, %d)): Error al liberar el bloque %d en el caso general\n", pos_inicial, nivel, n_max, nbloque, pos_inicial);
 					return (-1);
@@ -728,22 +712,58 @@ int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, uns
 				b_liberados++;
 			}
 			
-			/* CAMBIAR NBLOQUE CREO QUE LO SOLUCIONA TODO!!! */
 			nbloque = 0;
 		}
-		
-		/* Devolvemos los bloques liberados */
-		printf("        Liberados: %d\n", b_liberados);
+
 		return (b_liberados);
 	}
 	else {
-		printf("    Fuera de nivel (nivel: %d / n_max: %d)\n", nivel, n_max);
 		return (0);
 	}
 }
 
 
 
+int liberar_inodo(unsigned int ninodo) {
+
+	if (liberar_bloques(ninodo, 0) < 0) {
+		printf("ERROR (ficheros_basico.c -> liberar_inodo(%d)): Error al liberar el inodo %d\n", ninodo, ninodo);
+		return (-1);
+	}
+	
+	/* Actualizamos la lista enlazada de inodos libres */
+	struct superbloque SB;
+	if (bread(0, (char *)&SB) < 0) {
+		printf("ERROR (ficheros_basico.c -> liberar_inodo(%d)): Error al leer el superbloque\n", ninodo);
+		return (-1);
+	}
+	
+	struct inodo in;
+	if (leer_inodo(&in, ninodo) < 0) {
+		printf("ERROR (ficheros_basico.c -> liberar_inodo(%d)): Error al leer el inodo\n", ninodo);
+		return (-1);
+	}
+	
+	in.pb_ind[0] = SB.ni_libre;
+	in.tipo = LIBRE;
+	in.t_bytes = 0;
+	in.f_modificacion = time(NULL);
+	
+	if (escribir_inodo(in, ninodo) < 0) {
+		printf("ERROR (ficheros_basico.c -> liberar_inodo(%d)): Error al escribir el inodo %d\n", ninodo, ninodo);
+		return (-1);
+	}
+	
+	SB.ni_libre = ninodo;
+	SB.i_libres++;
+	
+	if (bwrite(0, (char *)&SB) < 0) {
+		printf("ERROR (ficheros_basico.c -> liberar_inodo(%d)): Error al escribir el superbloque\n", ninodo);
+		return (-1);
+	}
+	
+	return (1);
+}
 
 
 

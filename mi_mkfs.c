@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
 		/* PRUEBAS CON LIBERAR_BLOQUES E INODOS */
 		struct inodo in;
 		in.tipo = DIRECTORIO;
-		in.n_bloques = 20; /* SOLO PARA QUE PASE EL PRIMER IF DE LIBERAR BLOQUES */
+		in.n_bloques = 20; 
 		
 		/* Punteros directos */
 		unsigned int bufferp[TP];
@@ -127,10 +127,10 @@ int main(int argc, char **argv) {
 		}
 		bwrite(in.pb_ind[2], bufferp);*/
 		
-		int perra = reservar_inodo(in); /* No cuenta como bloque reservado */
+		int perra = reservar_inodo(in);
 		printf("PERRA: %d\n\n", perra);
 		
-		liberar_bloques(0, 5000);
+		liberar_inodo(0);
 		
 		/* Leemos el inodo 
 		leer_inodo(&in, 0);
