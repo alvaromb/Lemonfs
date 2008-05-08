@@ -768,6 +768,85 @@ int liberar_inodo(unsigned int ninodo) {
 
 
 
+int traducir_bloque_inodo(unsigned int ninodo, unsigned int blogico, char reservar) {
+
+	if ((0 <= blogico) && (blogico <= (TAM_PDIR+TP+(TP*TP)+(TP*TP*TP)))) {
+		if ((reservar == 1) || (reservar == 0)) {
+		
+			struct inodo in;
+			if (leer_inodo(&in, ninodo) < 0) {
+				printf("ERROR (ficheros_basico.c -> traducir_bloque_inodo(%d, %d, %d)): Error al leer el inodo %d\n", ninodo, blogico, reservar, ninodo);
+				return (-1);
+			}
+			
+			/* Punteros directos */
+			if ((0 <= blogico) && (blogico < TAM_PDIR)) {
+				if (reservar == 0) {
+					if (in.pb_dir[blogico] == 0) {
+						return (-1);
+					}
+					else {
+						return (in.pb_dir[blogico]);
+					}
+				}
+				else if (reservar == 1) {
+					if (in.pb_dir[blogico] == 0) {
+						int bloque_nuevo = reservar_bloque();
+						in.pb_dir[blogico] = bloque_nuevo;
+						escribir_inodo(in, ninodo);
+						
+						return (bloque_nuevo);
+					}
+					else {
+						return (in.pb_dir[blogico]);
+					}
+				}
+			}
+			
+			/* Punteros indirectos */
+			else if ((TAM_PDIR <= blogico) && (blogico <= (TAM_PDIR+TP+(TP*TP)+(TP*TP*TP)))) {
+				
+			}
+		}
+	}
+
+}
+
+
+
+int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigned int n_max, int nbloque, char reservar)
+{
+
+	if (condition) {
+		
+	}
+
+
+	if (nivel <= n_max) {
+		switch (nivel) {
+			case 1:
+				text
+				break;
+				
+				
+			case 2:
+				
+				break;
+				
+				
+			case 3:
+				
+				break;
+				
+				
+			default:
+				break;
+		}
+	}
+
+}
+
+
 
 
 
