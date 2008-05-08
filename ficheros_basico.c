@@ -598,7 +598,7 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes)
 			/* Eliminamos los bloques indirectos */
 			int n_max;
 			int j;
-			for (j = 0; j < 2; j++) { /* CAMBIAR Y ADAPTAR ESTO!!!! */
+			for (j = 0; j < TAM_PIND; j++) { /* CAMBIAR Y ADAPTAR ESTO!!!! */
 				if ((0 < in.pb_ind[j]) && (in.pb_ind[j] < SB.n_bloques) && (leer_bit(in.pb_ind[j]) > 0)) {
 				
 					n_max = j+1;
