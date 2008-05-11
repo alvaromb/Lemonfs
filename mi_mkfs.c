@@ -83,6 +83,7 @@ int main(int argc, char **argv) {
 			in.pb_ind[pp] = 0;
 		}
 		
+		leerSB();
 		
 		/* Punteros directos */
 		unsigned int bufferp[TP];
@@ -92,6 +93,9 @@ int main(int argc, char **argv) {
 		}
 		printf("Punteros directos listos\n");
 		
+		leerSB();
+		//sleep(15);
+		
 		/* Puntero indirecto 0 */
 		in.pb_ind[0] = reservar_bloque();
 		for (j = 0; j < TP; j++) {
@@ -99,6 +103,9 @@ int main(int argc, char **argv) {
 		}
 		bwrite(in.pb_ind[0], bufferp);
 		printf("Puntero indirecto 0 listo\n");
+		
+		leerSB();
+		//sleep(15);
 		
 		/* Puntero indirecto 1 */
 		unsigned int bufferpp[TP];
@@ -113,6 +120,10 @@ int main(int argc, char **argv) {
 			bwrite(bufferp[j], bufferpp);
 		}
 		bwrite(in.pb_ind[1], bufferp);
+		printf("Puntero indirecto 1 listo\n");
+		
+		leerSB();
+		//sleep(15);
 		
 		/* Puntero indirecto 2 
 		unsigned int bufferppp[TP];
@@ -135,7 +146,8 @@ int main(int argc, char **argv) {
 		int perra = reservar_inodo(in);
 		printf("PERRA: %d\n\n", perra);
 		
-		liberar_inodo(0);
+		//liberar_inodo(0);
+		liberar_bloques(0, 270500);
 		
 		/* Leemos el inodo 
 		leer_inodo(&in, 0);
