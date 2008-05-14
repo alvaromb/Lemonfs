@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
 		printf("PERRA: %d\n\n", perra);
 		
 		//liberar_inodo(0);
-		liberar_bloques(0, 270500);
+		liberar_bloques(0, 532480);
 		
 		/* Leemos el inodo 
 		leer_inodo(&in, 0);
