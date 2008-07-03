@@ -123,7 +123,7 @@ int liberar_inodo(unsigned int ninodo);
 
 int traducir_bloque_inodo(unsigned int ninodo, unsigned int blogico, char reservar);
 
-int traducir_puntero_indirecto(unsigned int blogico, int pos_inicial, int pos_anterior, unsigned int nivel, unsigned int n_max, char reservar);
+int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigned int n_max, char reservar, int pos_inicial, int pos_anterior);
 
 #endif
 
