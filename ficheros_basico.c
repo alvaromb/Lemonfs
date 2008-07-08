@@ -775,7 +775,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int blogico, char reserv
 			struct inodo in;
 			if (leer_inodo(&in, ninodo) < 0) {
 				printf("ERROR (ficheros_basico.c -> traducir_bloque_inodo(%d, %d, %d)): Error al leer el inodo %d\n", ninodo, blogico, reservar, ninodo);
-				return (-1);*/
+				return (-1);
 			}
 			
 			/* Punteros directos */
@@ -804,24 +804,32 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int blogico, char reserv
 			
 			/* Punteros indirectos */
 			else if ((TAM_PDIR <= blogico) && (blogico <= (TAM_PDIR+TP+(TP*TP)+(TP*TP*TP)))) {
+			
+				printf("Punteros indirectos\n");
 				
 				int puntInd = 0;
 				if ((TAM_PDIR <= blogico) && (blogico < (TAM_PDIR+TP))) {
 					puntInd = 0;
+					printf("    Puntero 0\n");
 				}
 				else if (((TAM_PDIR+TP) <= blogico) && (blogico < (TAM_PDIR+TP+(TP*TP)))) {
 					puntInd = 1;
+					printf("    Puntero 1\n");
 				}
 				else if (((TAM_PDIR+TP+(TP*TP)) <= blogico) && (blogico < (TAM_PDIR+TP+(TP*TP)+(TP*TP*TP)))) {
 					puntInd = 2;
+					printf("    Puntero 2\n");
 				}
 				
 				/* Si el bloque de punteros indirectos no existe */
 				if (in.pb_ind[puntInd] <= 0) {
 					if (reservar == 0) {
+						printf("	bloque de punteros inexistente (reservar 0, devolvemos 0)\n");
 						return (0);
 					}
 					else if (reservar == 1) {
+						printf("	bloque de punteros inexistente (reservar 1, 1 bloque menos)\n");
+					
 						unsigned int bufferp[TP];
 						int i;
 						for (i = 0; i < TP; i++) {
@@ -829,26 +837,29 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int blogico, char reserv
 						}
 						
 						in.pb_ind[puntInd] = reservar_bloque();
+						printf("	escribimos el bloque de punteros inexistente %d\n", in.pb_ind[puntInd]);
 						if (bwrite(in.pb_ind[puntInd], bufferp) < 0) {
 							printf("ERROR (ficheros_basico.c -> traducir_bloque_inodo(%d, %d, %c)): Error al escribir el bloque de punteros nuevo en %d, con nbloque %d\n", ninodo, blogico, reservar, puntInd, in.pb_ind[puntInd]);
 							return (-1);
 						}
+						
+						/* Actualizamos el inodo */
+						escribir_inodo(in, ninodo);
 					}
 				}
 				
 				/* Variables:
 					
-					blogico			= 
-					nivel			= 
-					n_max			= 
-					reservar		= 
-					pos_inicial		= 
+					blogico			= debe quedarse igual
+					nivel			= debe ser 1 siempre
+					n_max			= puntInd+1
+					reservar		= debe quedarse igual
+					pos_inicial		= puede tomar cualquier valor
 					pos_anterior	= in.pb_ind[puntInd]
 				
 				  */
 				
-				/* AQUÍ LA LLAMADA A traducir_puntero_indirecto 
-				  Esta llamada será con pos_inicial = in.pb_ind[puntInd]*/
+				return (traducir_puntero_indirecto(blogico, 1, ++puntInd, reservar, 0, in.pb_ind[puntInd]));
 				 
 			}
 		}
@@ -862,14 +873,99 @@ int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigne
 {
 
 	if (nivel <= n_max) {
+	
+		int v_devuelto;
 		
+		printf("función traducir_puntero_indirecto----------------\n");
+		printf("	leemos el bloque\n");
 		unsigned int bufferp[TP];
 		if (bread(pos_anterior, bufferp) < 0) {
-			printf("ERROR (ficheros_basico.c -> traducir_puntero_indirecto(%d, %d, %d, %s, &d, &d)): Error al leer el bloque pos_anterior: %d\n", blogico, nivel, n_max, reservar, pos_inicial, pos_anterior, pos_anterior);
+			printf("ERROR (ficheros_basico.c -> traducir_puntero_indirecto(%d, %d, %d, %s, %d, %d)): Error al leer el bloque pos_anterior: %d\n", blogico, nivel, n_max, reservar, pos_inicial, pos_anterior, pos_anterior);
 			return (-1);
 		}
 		
 		/* HACEMOS EL SWITCH CON NIVEL */
+		printf("	switch con nivel = %d y n_max = %d\n", nivel, n_max);
+		switch (nivel) {
+			case 1:
+				if (n_max == 1) {
+					blogico -= TAM_PDIR;
+					pos_inicial = blogico;
+				}
+				else if (n_max == 2) {
+					blogico -= (TP+TAM_PDIR);
+					pos_inicial = blogico/TP;
+				}
+				else if (n_max == 3) {
+					blogico -= ((TP*TP)+TP+TAM_PDIR);
+					pos_inicial = blogico/(TP*TP);
+				}
+				
+				break;
+				
+				
+			case 2:
+				if (n_max == 2) {
+					pos_inicial = blogico%TP;
+				}
+				else if (n_max == 3) {
+					blogico = blogico%(TP*TP);
+					pos_inicial = blogico/TP;
+				}
+				
+				break;
+				
+			
+			case 3:
+				pos_inicial = blogico%TP;
+				
+				break;
+		}
+		
+		printf("		resultado del switch: blogico = %d y pos_inicial = %d\n", blogico, pos_inicial);
+		
+		/* Si el cálculo es negativo, inicializamos 
+		if (blogico < 0) {
+			blogico = 0;
+			pos_inicial = 0;
+		}*/
+		
+		/* NO EXISTE EL BLOQUE CALCULADO */
+		if (bufferp[pos_inicial] <= 0) {
+			if (reservar == 0) {
+				return (-1);
+			}
+			else if (reservar == 1) {
+				bufferp[pos_inicial] = reservar_bloque();
+				printf("	modificamos bloque de punteros en %d\n", pos_anterior);
+				if (bwrite(pos_anterior, bufferp) < 0) {
+					printf("ERROR (ficheros_basico.c -> traducir_puntero_indirecto(%d, %d, %d, %s, %d, %d)): Error al escribir en el bloque pos_anterior: %d\n", blogico, nivel, n_max, reservar, pos_inicial, pos_anterior, pos_anterior);
+					return (-1);
+				}
+				
+				if (n_max != nivel) {
+					unsigned int bufferpp[TP];
+					int i;
+					for (i = 0; i < TP; i++) {
+						bufferpp[i] = 0;
+					}
+					printf("	creamos el bloque de punteros en %d\n", bufferp[pos_inicial]);
+					if (bwrite(bufferp[pos_inicial], bufferpp) < 0) {
+						printf("ERROR (ficheros_basico.c -> traducir_puntero_indirecto(%d, %d, %d, %s, %d, %d)): Error al escribir el nuevo bloque en bufferp[%d] = %d\n", blogico, nivel, n_max, reservar, pos_inicial, pos_anterior, pos_inicial, bufferp[pos_inicial]);
+						return (-1);
+					}
+				}
+			}
+		}
+			
+		if (n_max != nivel) {
+			return (traducir_puntero_indirecto(blogico, ++nivel, n_max, reservar, 0, bufferp[pos_inicial]));
+		}
+		else {
+			printf("	v_devuelto = %d\n\n", bufferp[pos_inicial]);
+			return (bufferp[pos_inicial]);
+		}
+			
 	}
 	else {
 		return (0);

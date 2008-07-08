@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 			printf("perra: %d\n", perra);
 		}*/
 		
-		/* PRUEBAS CON LIBERAR_BLOQUES E INODOS */
+		/* PRUEBAS CON LIBERAR_BLOQUES E INODOS 
 		struct inodo in;
 		in.tipo = DIRECTORIO;
 		in.n_bloques = 20; 
@@ -83,9 +83,9 @@ int main(int argc, char **argv) {
 			in.pb_ind[pp] = 0;
 		}
 		
-		leerSB();
+		leerSB();*/
 		
-		/* Punteros directos */
+		/* Punteros directos 
 		unsigned int bufferp[TP];
 		int j;
 		for (j = 0; j < TAM_PDIR; j++) {
@@ -94,9 +94,9 @@ int main(int argc, char **argv) {
 		printf("Punteros directos listos\n");
 		
 		leerSB();
-		//sleep(15);
+		//sleep(15);*/
 		
-		/* Puntero indirecto 0 */
+		/* Puntero indirecto 0 
 		in.pb_ind[0] = reservar_bloque();
 		for (j = 0; j < TP; j++) {
 			bufferp[j] = reservar_bloque();
@@ -105,9 +105,9 @@ int main(int argc, char **argv) {
 		printf("Puntero indirecto 0 listo\n");
 		
 		leerSB();
-		//sleep(15);
+		//sleep(15);*/
 		
-		/* Puntero indirecto 1 */
+		/* Puntero indirecto 1 
 		unsigned int bufferpp[TP];
 		in.pb_ind[1] = reservar_bloque();
 		for (j = 0; j < TP; j++) {
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
 		printf("Puntero indirecto 1 listo\n");
 		
 		leerSB();
-		//sleep(15);
+		//sleep(15);*/
 		
 		/* Puntero indirecto 2 
 		unsigned int bufferppp[TP];
@@ -143,11 +143,11 @@ int main(int argc, char **argv) {
 		}
 		bwrite(in.pb_ind[2], bufferp);*/
 		
-		int perra = reservar_inodo(in);
-		printf("PERRA: %d\n\n", perra);
+		//int perra = reservar_inodo(in);
+		//printf("PERRA: %d\n\n", perra);
 		
 		//liberar_inodo(0);
-		liberar_bloques(0, 532480);
+		//liberar_bloques(0, 532480);
 		
 		/* Leemos el inodo 
 		leer_inodo(&in, 0);
@@ -159,6 +159,30 @@ int main(int argc, char **argv) {
 			printf("ind: %d\n", in.pb_ind[k]);
 		}*/
 		
+		
+		/* PRUEBAS CON TRADUCIR_BLOQUE_INODO */
+		struct inodo in;
+		in.tipo = DIRECTORIO;
+		in.n_bloques = 0; 
+		int pp;
+		for (pp = 0; pp < TAM_PIND; pp++) {
+			in.pb_ind[pp] = 0;
+			if (pp == 0 || pp == 1 || pp == 2) {
+				in.pb_dir[pp] = 0;
+			}
+		}
+		
+		
+		printf("inodo = %d\n\n", reservar_inodo(in));
+		
+		int perra = traducir_bloque_inodo(0, 264, 1);
+		printf("perra = %d\n", perra);
+		int perra2 = traducir_bloque_inodo(0, 264, 0);
+		printf("perra2 = %d\n", perra2);
+		perra = traducir_bloque_inodo(0, 265, 1);
+		printf("perra3 = %d\n", perra);
+		perra = traducir_bloque_inodo(0, 263, 1);
+		printf("perra4 = %d\n", perra);
 			
 		/* FIN PRUEBAS */
 		printf("\n\n");
