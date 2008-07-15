@@ -1,5 +1,8 @@
 #include "bloques.h"
 #include "ficheros_basico.h"
+#include "ficheros.h"
+
+#include <stdlib.h>
 
 int main(int argc, char **argv) {
 	
@@ -160,16 +163,16 @@ int main(int argc, char **argv) {
 		}*/
 		
 		
-		/* PRUEBAS CON TRADUCIR_BLOQUE_INODO */
+		/* PRUEBAS CON TRADUCIR_BLOQUE_INODO 
 		struct inodo in;
 		in.tipo = DIRECTORIO;
 		in.n_bloques = 0; 
 		int pp;
 		for (pp = 0; pp < TAM_PIND; pp++) {
 			in.pb_ind[pp] = 0;
-			if (pp == 0 || pp == 1 || pp == 2) {
-				in.pb_dir[pp] = 0;
-			}
+		}
+		for (pp = 0; pp < TAM_PDIR; pp++) {
+			in.pb_dir[pp] = 0;
 		}
 		
 		
@@ -182,7 +185,27 @@ int main(int argc, char **argv) {
 		perra = traducir_bloque_inodo(0, 265, 1);
 		printf("perra3 = %d\n", perra);
 		perra = traducir_bloque_inodo(0, 263, 1);
-		printf("perra4 = %d\n", perra);
+		printf("perra4 = %d\n", perra); */
+		
+		
+		/* PRUEBAS CON mi_write_f 
+		struct inodo in;
+		in.tipo = DIRECTORIO;
+		in.n_bloques = 0; 
+		int pp;
+		for (pp = 0; pp < TAM_PIND; pp++) {
+			in.pb_ind[pp] = 0;
+		}
+		for (pp = 0; pp < TAM_PDIR; pp++) {
+			in.pb_dir[pp] = 0;
+		}
+		
+		printf("inodo = %d\n\n", reservar_inodo(in));
+				
+		const void *buf;
+		buf = malloc(sizeof(8000));
+		mi_write_f(0, buf, 67379200, 8000); */
+		
 			
 		/* FIN PRUEBAS */
 		printf("\n\n");

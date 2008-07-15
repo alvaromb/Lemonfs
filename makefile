@@ -5,8 +5,7 @@
 
 #VARIABLES:
 CC = gcc
-OBJECTS = bloques.o ficheros_basico.o
-#ficheros.o
+OBJECTS = bloques.o ficheros_basico.o ficheros.o
 
 #FUNCIÓN PRINCIPAL:
 mi_mkfs	:	mi_mkfs.o  $(OBJECTS)

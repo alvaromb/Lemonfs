@@ -16,4 +16,13 @@ struct STAT {
 };
 
 
+int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigned int nbytes);
+
+int mi_read_f(unsigned int inodo, void *buf, unsigned int offset, unsigned int nbytes);
+
+int mi_truncar_f(unsigned int ninodo, unsigned int nbytes);
+
+int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
+
 #endif
+
