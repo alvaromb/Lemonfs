@@ -206,9 +206,33 @@ int main(int argc, char **argv) {
 		buf = malloc(sizeof(8000));
 		mi_write_f(0, buf, 67379200, 8000); */
 		
+		
+		/* PRUEBAS CON mi_read_f */
+		struct inodo in;
+		in.tipo = DIRECTORIO;
+		in.n_bloques = 0; 
+		int pp;
+		for (pp = 0; pp < TAM_PIND; pp++) {
+			in.pb_ind[pp] = 0;
+		}
+		for (pp = 0; pp < TAM_PDIR; pp++) {
+			in.pb_dir[pp] = 0;
+		}
+		
+		printf("inodo = %d\n\n", reservar_inodo(in));
+				
+		const void *buf;
+		buf = malloc(sizeof(8192));
+		printf("bytes escritos = %d\n\n", mi_write_f(0, buf, 0, 8192));
+		
+		void *bufl;
+		bufl = malloc(sizeof(8192));
+		printf("bytes leídos = %d\n", mi_read_f(0, bufl, 0, 8192));
+		
+		
 			
 		/* FIN PRUEBAS */
-		printf("\n\n");
+		printf("\n\n\n");
 		leerSB();
 		bumount();
 	}
