@@ -5,7 +5,7 @@
 
 #VARIABLES:
 CC = gcc
-OBJECTS = bloques.o ficheros_basico.o ficheros.o
+OBJECTS = bloques.o ficheros_basico.o ficheros.o directorios.o
 
 #FUNCIÓN PRINCIPAL:
 mi_mkfs	:	mi_mkfs.o  $(OBJECTS)
@@ -25,9 +25,12 @@ ficheros_basico.o	:	ficheros_basico.c ficheros_basico.h
 ficheros.o	:	ficheros.c ficheros.h
 				$(CC) -c ficheros.c
 				
+directorios.o	:	directorios.c directorios.h
+					$(CC) -c directorios.c
+				
 
 clean: 
 	rm mi_mkfs \
-		domecillo mi_mkfs.o bloques.o ficheros_basico.o ficheros.o
+		domecillo mi_mkfs.o bloques.o ficheros_basico.o ficheros.o directorios.o
 
 

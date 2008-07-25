@@ -4,6 +4,9 @@
 #include <time.h>
 #include "ficheros_basico.h"
 
+
+typedef unsigned char BUFFER[TB];
+
 /*
  * Estructura para los metadatos del inodo.
  */

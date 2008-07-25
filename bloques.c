@@ -36,6 +36,11 @@ int bumount() {
 
 int bwrite(unsigned int bloque, const void *buf) {
 	
+	/* QUITAR ESTA MIERDA */
+	if (bloque == 7) {
+		printf("\nTOCAMOS EL BLOQUE 7 AMIJO!!\n\n");
+	}
+	
 	int seek = lseek(fs, bloque*TB, SEEK_SET);
 	
 	if (seek < 0) {

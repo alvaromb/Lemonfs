@@ -200,12 +200,12 @@ int initAI(unsigned int nbloques) {
 		}
 	}
 	
-	/*in.tipo = DIRECTORIO;
+	in.tipo = DIRECTORIO;
 	in.t_bytes = 0;
 	in.n_bloques = 0;
 	in.f_creacion = time(NULL);
 	in.f_modificacion = time(NULL);
-	//reservar_inodo(in);	*/
+	reservar_inodo(in);	
 	
 }
 
@@ -506,6 +506,16 @@ int reservar_inodo(struct inodo in) {
 			return (-1);
 		}
 		
+		/* Inicializamos los punteros del nuevo inodo */
+		int i;
+		for (i = 0; i < TAM_PDIR; i++) {
+			if ((0 <= i) && (i < TAM_PIND)) {
+				in.pb_ind[i] = 0;
+			}
+			
+			in.pb_dir[i] = 0;
+		}		
+		
 		if (escribir_inodo(in, inodo_libre) < 0) {
 			printf("ERROR (ficheros_basico.c -> reservar_inodo(in)): Error al escribir el inodo\n");
 			return (-1);
@@ -593,6 +603,7 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes) {
 							printf("ERROR (ficheros_basico.c -> liberar_bloques(%d, %d)): Error al liberar el bloque %d del puntero indirecto %d\n", ninodo, nbytes, in.pb_ind[j], j);
 							return (-1);
 						}
+						printf("liberamos el puntero indirecto j = %d\n", j);
 						in.pb_ind[j] = 0;
 						/* FALTA ACTUALIZAR EL INODO, BLOQUES LIBERADOS, ETC... */
 					}
@@ -601,6 +612,9 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes) {
 					printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): No hay puntero indirecto (fuera de rango) %d\n", ninodo, nbytes, j);
 				}
 			}			
+			
+			/* Actualizamos el inodo (actualización parcial, completarla) */
+			escribir_inodo(in, ninodo);
 			
 		}
 		else {
