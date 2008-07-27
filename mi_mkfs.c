@@ -334,10 +334,7 @@ int main(int argc, char **argv) {
 		/* Entrada de "dir1" */
 		struct entrada ent;
 		ent.inodo = reservar_inodo(in);
-		ent.nombre[0] = 'd';
-		ent.nombre[1] = 'i';
-		ent.nombre[2] = 'r';
-		ent.nombre[3] = '1';
+		strcpy(ent.nombre, "/dir1/");
 		/* Escribimos la entrada "dir1" en el inodo '/' */
 		mi_write_f(0, &ent, 0, sizeof(struct entrada));
 		/* Comprobamos lo que hemos escrito */
@@ -348,10 +345,7 @@ int main(int argc, char **argv) {
 		
 		/* Entrada de "dir2" */
 		ent.inodo = reservar_inodo(in);
-		ent.nombre[0] = 'd';
-		ent.nombre[1] = 'i';
-		ent.nombre[2] = 'r';
-		ent.nombre[3] = '2';
+		strcpy(ent.nombre, "/dir1/dir2/");
 		/* Escribimos la entrada "dir2" en el inodo 1 */
 		mi_write_f(e.inodo, &ent, 0, sizeof(struct entrada));
 		/* Comprobamos lo que hemos escrito */
@@ -364,13 +358,7 @@ int main(int argc, char **argv) {
 		/* Entrada de "fichero" */
 		in.tipo = FICHERO;
 		ent.inodo = reservar_inodo(in);
-		ent.nombre[0] = 'f';
-		ent.nombre[1] = 'i';
-		ent.nombre[2] = 'c';
-		ent.nombre[3] = 'h';
-		ent.nombre[4] = 'e';
-		ent.nombre[5] = 'r';
-		ent.nombre[6] = 'o';
+		strcpy(ent.nombre, "/dir1/dir2/fichero");
 		/* Escribimos la entrada de "fichero" en el inodo 2 */
 		mi_write_f(e.inodo, &ent, 0, sizeof(struct entrada));
 		/* Comprobamos lo que hemos escrito */
@@ -391,11 +379,11 @@ int main(int argc, char **argv) {
 		printf(" buscar_entrada()\n");
 		unsigned int p_inodo;
 		unsigned int p_entrada;
-		buscar_entrada("/dir1/dir2/fichero", 0, &p_inodo, &p_entrada);
+		int p_inodo_dir = buscar_entrada("/dir1/dir2/fichero", 0, &p_inodo, &p_entrada);
 		printf(" Fin buscar_entrada()\n");
 		/* Imprimimos los resultados obtenidos */
 		printf("CONSULTAMOS LOS RESULTADOS OBTENIDOS\n");
-		//printf(" - p_inodo_dir: %d\n", *p_inodo_dir);
+		printf(" - p_inodo_dir: %d\n", p_inodo_dir);
 		printf(" - p_inodo: %d\n", p_inodo);
 		printf(" - p_entrada: %d\n", p_entrada);
 		
