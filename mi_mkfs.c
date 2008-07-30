@@ -322,46 +322,46 @@ int main(int argc, char **argv) {
 		
 		
 		
-		/* PRUEBAS CON: buscar_entrada */
+		/* PRUEBAS CON: buscar_entrada X
 		printf("\n\n\n\n##################################################\n");
 		printf("PRUEBAS CON buscar_entrada\n\n");
 		
-		/* Inodo de "dir2" */
+		/* Inodo de "dir2" 
 		struct inodo in;
 		in.tipo = DIRECTORIO;
 		in.n_bloques = 1;
 		
-		/* Entrada de "dir1" */
+		/* Entrada de "dir1"
 		struct entrada ent;
 		ent.inodo = reservar_inodo(in);
 		strcpy(ent.nombre, "/dir1/");
-		/* Escribimos la entrada "dir1" en el inodo '/' */
+		/* Escribimos la entrada "dir1" en el inodo '/' 
 		mi_write_f(0, &ent, 0, sizeof(struct entrada));
-		/* Comprobamos lo que hemos escrito */
+		/* Comprobamos lo que hemos escrito 
 		struct entrada e;
 		mi_read_f(0, &e, 0, sizeof(struct entrada));
 		printf("COMPROBACIÓN ESCRITURA DE dir1\n");
 		printf(" - Directorio dir1: nombre = %s, inodo = %d\n\n", e.nombre, e.inodo);
 		
-		/* Entrada de "dir2" */
+		/* Entrada de "dir2" 
 		ent.inodo = reservar_inodo(in);
 		strcpy(ent.nombre, "/dir1/dir2/");
-		/* Escribimos la entrada "dir2" en el inodo 1 */
+		/* Escribimos la entrada "dir2" en el inodo 1 
 		mi_write_f(e.inodo, &ent, 0, sizeof(struct entrada));
-		/* Comprobamos lo que hemos escrito */
+		/* Comprobamos lo que hemos escrito 
 		mi_read_f(0, &e, 0, sizeof(struct entrada));
 		printf("COMPROBACIÓN DE ESCRITURA DE dir2\n");
 		printf(" - Directorio dir1: nombre = %s, inodo = %d\n", e.nombre, e.inodo);
 		mi_read_f(e.inodo, &e, 0, sizeof(struct entrada));
 		printf(" - Directorio dir2: nombre = %s, inodo = %d\n\n", e.nombre, e.inodo);
 		
-		/* Entrada de "fichero" */
+		/* Entrada de "fichero" 
 		in.tipo = FICHERO;
 		ent.inodo = reservar_inodo(in);
 		strcpy(ent.nombre, "/dir1/dir2/fichero");
-		/* Escribimos la entrada de "fichero" en el inodo 2 */
+		/* Escribimos la entrada de "fichero" en el inodo 2 
 		mi_write_f(e.inodo, &ent, 0, sizeof(struct entrada));
-		/* Comprobamos lo que hemos escrito */
+		/* Comprobamos lo que hemos escrito 
 		mi_read_f(0, &e, 0, sizeof(struct entrada));
 		printf("COMPROBACIÓN DE ESCRITURA DE dir2\n");
 		printf(" - Directorio dir1 (%d): nombre = %s, inodo = %d\n", 0, e.nombre, e.inodo);
@@ -372,20 +372,35 @@ int main(int argc, char **argv) {
 		mi_read_f(1, &e, 0, sizeof(struct entrada));
 		printf(" - Directorio dir2 (1): nombre = %s, inodo = %d\n", e.nombre, e.inodo);
 		mi_read_f(0, &e, 0, sizeof(struct entrada));
-		printf(" - Directorio dir1 (0): nombre = %s, inodo = %d\n\n", e.nombre, e.inodo);
+		printf(" - Directorio dir1 (0): nombre = %s, inodo = %d\n\n", e.nombre, e.inodo);*/
 		
-		/* Iniciamos las pruebas con 'buscar_entrada' */
+		/* Iniciamos las pruebas con 'buscar_entrada' 
 		printf("VAMOS A BUSCAR ENTRADA\n");
 		printf(" buscar_entrada()\n");
 		unsigned int p_inodo;
 		unsigned int p_entrada;
-		int p_inodo_dir = buscar_entrada("/dir1/dir2/fichero", 0, &p_inodo, &p_entrada);
+		unsigned int p_inodo_dir = 0;
+		int puta = buscar_entrada("/dir1/dir2/fichero", &p_inodo_dir, &p_inodo, &p_entrada);
 		printf(" Fin buscar_entrada()\n");
-		/* Imprimimos los resultados obtenidos */
+		/* Imprimimos los resultados obtenidos 
 		printf("CONSULTAMOS LOS RESULTADOS OBTENIDOS\n");
 		printf(" - p_inodo_dir: %d\n", p_inodo_dir);
 		printf(" - p_inodo: %d\n", p_inodo);
-		printf(" - p_entrada: %d\n", p_entrada);
+		printf(" - p_entrada: %d\n", p_entrada); */
+		
+		
+		
+		/* PRUEBAS CON: extraer_directorio 
+		char camino[60];
+		strcpy(camino, "entramos mierda");
+		char *inicial;
+		inicial = (char *)malloc(sizeof(char *));
+		extraer_directorio(camino, inicial);
+		printf("\nCAMINO: camino = %s y inicial = %s\n", camino, inicial);*/
+		
+		
+		/* PRUEBAS CON: mi_creat */
+		
 		
 		
 		/* FIN PRUEBAS */

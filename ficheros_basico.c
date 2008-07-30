@@ -1,7 +1,5 @@
 #include "ficheros_basico.h"
 
-
-
 int leerSB() {
 
 	struct superbloque SB;
@@ -51,7 +49,6 @@ int tamMB(unsigned int nbloques) {
 	}
 	
 	return (tam_mb);
-	
 }
 
 
@@ -68,7 +65,6 @@ int tamAI(unsigned int nbloques) {
 	}
 	
 	return (tam_in);
-	
 }
 
 
@@ -100,7 +96,6 @@ int initSB(unsigned int nbloques, char *nom_fs) {
 	}
 	
 	return (1);
-	
 }
 
 
@@ -163,7 +158,6 @@ int initMB(unsigned int nbloques) {
 			bwrite(bloq, buffer);
 		}
 	}
-	
 }
 
 
@@ -200,13 +194,13 @@ int initAI(unsigned int nbloques) {
 		}
 	}
 	
+	/* Creamos el inodo raíz */
 	in.tipo = DIRECTORIO;
 	in.t_bytes = 0;
 	in.n_bloques = 0;
 	in.f_creacion = time(NULL);
 	in.f_modificacion = time(NULL);
-	reservar_inodo(in);	
-	
+	reservar_inodo(in);
 }
 
 
@@ -215,7 +209,6 @@ int pbit(unsigned int nbloque) {
 
 	int i = nbloque % 8;
 	return (i);
-
 }
 
 
@@ -224,7 +217,6 @@ int pbyte(unsigned int nbloque) {
 
 	int i = nbloque / 8;
 	return (i);
-
 }
 
 
@@ -266,7 +258,6 @@ int escribir_bit(unsigned int nbit, char valor) {
 	}
 	
 	return (1);
-
 }
 
 
@@ -303,7 +294,6 @@ int leer_bit(unsigned int nbit) {
 			return (0);
 		}
 	}
-
 }
 
 
@@ -358,12 +348,12 @@ int reservar_bloque() {
 		printf("ERROR, NO HAY BLOQUES LIBRES\n");
 		return (-1);
 	}
-
 }
 
 
 
 int liberar_bloque(unsigned int bloque) {
+
 	struct superbloque SB;
 	if (bread(0, (char *)&SB) < 0) {
 		printf("ERROR (ficheros_basico.c -> liberar_bloque(%d)): Error al leer el SB\n", bloque);
@@ -397,7 +387,6 @@ int liberar_bloque(unsigned int bloque) {
 		printf("ERROR (ficheros_basico.c -> liberar_bloque(%d)): Valor de bloque negativo ó fuera de rango.\n", bloque);
 		return (-1); /* PROVISIONAL, ANALIZAR SI ES ÉXITO Ó FRACASO QUE EL BLOQUE DESTINO NO EXISTA */
 	}
-
 }
 
 
@@ -484,7 +473,6 @@ int leer_inodo(struct inodo *in, unsigned int ninodo) {
 		printf("Info (ficheros_basico.c -> leer_inodo(in, %d)): Upps! parece que el numero de inodo es muy grande o menor que 0.\n", ninodo);
 		return (-1); /* DUDA SI ESTO ES NECESARIO */
 	}
-
 }
 
 
@@ -555,7 +543,7 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes) {
 	
 	if (in.tipo != LIBRE) {
 		int bloques_liberados = 0;
-		int n_asignados = in.n_bloques; /* ESTO ES POSIBLE QUE SOBRE */
+		int n_asignados = in.n_bloques;
 		int pos_inicial;
 		
 		if (nbytes%TB > 0) {
@@ -565,7 +553,7 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes) {
 			pos_inicial = nbytes/TB;
 		}
 		
-		if (n_asignados > 0) { /* ESTO ES POSIBLE QUE SOBRE */
+		if (n_asignados > 0) {
 		
 			/* Eliminamos los bloques directos */
 			int i;
@@ -587,7 +575,6 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes) {
 				}
 				pos_inicial = i; /* Avanzamos la posición inicial */
 			}
-			
 			
 			/* Eliminamos los bloques indirectos */
 			int n_max;
@@ -613,7 +600,19 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes) {
 				}
 			}			
 			
-			/* Actualizamos el inodo (actualización parcial, completarla) */
+			/* Actualizamos el inodo */
+			int n_bloques;
+			if (nbytes%TB > 0) {
+				n_bloques = (nbytes/TB) + 1;
+			}
+			else {
+				n_bloques = nbytes/TB;
+			}
+			
+			in.n_bloques = n_bloques;
+			in.t_bytes = nbytes;
+			in.f_modificacion = time(NULL);
+			
 			escribir_inodo(in, ninodo);
 			
 		}
@@ -744,6 +743,7 @@ int liberar_inodo(unsigned int ninodo) {
 	in.pb_ind[0] = SB.ni_libre;
 	in.tipo = LIBRE;
 	in.t_bytes = 0;
+	in.n_bloques = 0;
 	in.f_modificacion = time(NULL);
 	
 	if (escribir_inodo(in, ninodo) < 0) {
@@ -859,8 +859,6 @@ int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigne
 	
 		int v_devuelto;
 		
-		//printf("función traducir_puntero_indirecto----------------\n");
-		//printf("	leemos el bloque\n");
 		unsigned int bufferp[TP];
 		if (bread(pos_anterior, bufferp) < 0) {
 			printf("ERROR (ficheros_basico.c -> traducir_puntero_indirecto(%d, %d, %d, %s, %d, %d)): Error al leer el bloque pos_anterior: %d\n", blogico, nivel, n_max, reservar, pos_inicial, pos_anterior, pos_anterior);
@@ -868,7 +866,6 @@ int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigne
 		}
 		
 		/* HACEMOS EL SWITCH CON NIVEL */
-		//printf("	switch con nivel = %d y n_max = %d\n", nivel, n_max);
 		switch (nivel) {
 			case 1:
 				if (n_max == 1) {
@@ -905,8 +902,6 @@ int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigne
 				break;
 		}
 		
-		//printf("		resultado del switch: blogico = %d y pos_inicial = %d\n", blogico, pos_inicial);
-		
 		/* Si el cálculo es negativo, inicializamos 
 		if (blogico < 0) {
 			blogico = 0;
@@ -920,7 +915,6 @@ int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigne
 			}
 			else if (reservar == 1) {
 				bufferp[pos_inicial] = reservar_bloque();
-				//printf("	modificamos bloque de punteros en %d\n", pos_anterior);
 				if (bwrite(pos_anterior, bufferp) < 0) {
 					printf("ERROR (ficheros_basico.c -> traducir_puntero_indirecto(%d, %d, %d, %s, %d, %d)): Error al escribir en el bloque pos_anterior: %d\n", blogico, nivel, n_max, reservar, pos_inicial, pos_anterior, pos_anterior);
 					return (-1);
@@ -932,7 +926,7 @@ int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigne
 					for (i = 0; i < TP; i++) {
 						bufferpp[i] = 0;
 					}
-					//printf("	creamos el bloque de punteros en %d\n", bufferp[pos_inicial]);
+					
 					if (bwrite(bufferp[pos_inicial], bufferpp) < 0) {
 						printf("ERROR (ficheros_basico.c -> traducir_puntero_indirecto(%d, %d, %d, %s, %d, %d)): Error al escribir el nuevo bloque en bufferp[%d] = %d\n", blogico, nivel, n_max, reservar, pos_inicial, pos_anterior, pos_inicial, bufferp[pos_inicial]);
 						return (-1);
@@ -945,7 +939,6 @@ int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigne
 			return (traducir_puntero_indirecto(blogico, ++nivel, n_max, reservar, 0, bufferp[pos_inicial]));
 		}
 		else {
-			//printf("	v_devuelto = %d\n\n", bufferp[pos_inicial]);
 			return (bufferp[pos_inicial]);
 		}
 			
@@ -954,20 +947,6 @@ int traducir_puntero_indirecto(unsigned int blogico, unsigned int nivel, unsigne
 		return (0);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
