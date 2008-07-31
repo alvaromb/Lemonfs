@@ -401,8 +401,27 @@ int main(int argc, char **argv) {
 		
 		
 		/* PRUEBAS CON: mi_creat */
+		printf("\n\n\n\n##################################################\n");
+		printf("PRUEBAS CON: mi_creat\n\n");
 		
+		mi_creat("/dir1/");
+		prt_stat_f(0);
+		prt_stat_f(1);
+		mi_creat("/dir1/fichero");
+		/* Imprimimos los resultados obtenidos 
+		unsigned int p_inodo = 0;
+		unsigned int p_entrada = 0;
+		unsigned int p_inodo_dir = 0;
+		int puta = buscar_entrada("/dir1/", &p_inodo_dir, &p_inodo, &p_entrada);
 		
+		printf("CONSULTAMOS LOS RESULTADOS OBTENIDOS\n");
+		printf(" - p_inodo_dir: %d\n", p_inodo_dir);
+		printf(" - p_inodo: %d\n", p_inodo);
+		printf(" - p_entrada: %d\n", p_entrada); */
+		
+		/*struct entrada ent[1];
+		mi_read_f(0, &ent, 0, sizeof(struct entrada));
+		printf("nombre: %s\n", ent[0].nombre);*/
 		
 		/* FIN PRUEBAS */
 		printf("\n\n\n");

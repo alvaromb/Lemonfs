@@ -27,5 +27,7 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes);
 
 int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
 
+int prt_stat_f(unsigned int ninodo);
+
 #endif
 

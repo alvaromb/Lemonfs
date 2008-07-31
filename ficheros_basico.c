@@ -400,7 +400,7 @@ int escribir_inodo(struct inodo in, unsigned int ninodo) {
 	}
 	
 	if (SB.i_libres > 0) {
-		if ((ninodo < 0) || (ninodo <= SB.n_inodos)) {
+		if ((0 <= ninodo) && (ninodo <= SB.n_inodos)) {
 			unsigned int b_inodo = ninodo/16;
 			b_inodo += SB.primerb_ai;
 			

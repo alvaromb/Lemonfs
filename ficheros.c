@@ -27,7 +27,6 @@ int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigne
 	
 		//printf("Vamos a traducir_bloque_inodo(%d, %d, 1)\n", inodo, i);
 		aux = traducir_bloque_inodo(inodo, i, 1);
-		//printf("TOCAMOS EL BLOQUE %d EN ESCRITURA\n", aux);
 		
 		if ((primer_blogico != ultimo_blogico) && (i == primer_blogico)) {
 			//printf("- entra en primer_blogico con aux = %d\n", aux);
@@ -44,7 +43,7 @@ int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigne
 			
 			if (primer_blogico == ultimo_blogico) {
 				memcpy(buffer+byte_ini, buf, byte_fin+1); /* meter control de errores */
-				//printf("	SOLO 1 BLOQUE memcpy(%d+%d, %d, %d)\n\n", buffer, byte_ini, buf, byte_fin);
+				//printf("	SOLO 1 BLOQUE memcpy(%d+%d, %d, %d)\n\n", buffer, byte_ini, buf, byte_fin+1);
 			}
 			else {
 				memcpy(buffer, buf+(TB-byte_ini)+(ultimo_blogico-primer_blogico-1)*TB, byte_fin+1); /* meter control de errores */
@@ -84,10 +83,10 @@ int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigne
 	in.t_bytes = bytes_escritos+offset;
 	
 	if (in.t_bytes%TB > 0) {
-		in.n_bloques = (in.t_bytes%TB) + 1;
+		in.n_bloques = (in.t_bytes/TB) + 1;
 	}
 	else {
-		in.n_bloques = in.t_bytes%TB;
+		in.n_bloques = in.t_bytes/TB;
 	}
 	
 	if (escribir_inodo(in, inodo) < 0) {
@@ -151,7 +150,7 @@ int mi_read_f(unsigned int inodo, void *buf, unsigned int offset, unsigned int n
 			
 			if (primer_blogico == ultimo_blogico) {
 				memcpy(buf, buffer + byte_ini, byte_fin+1);
-				//printf("	SOLO 1 BLOQUE memcpy(%d, %d+%d, %d)\n", buf, buffer, byte_ini, byte_fin);
+				//printf("	SOLO 1 BLOQUE memcpy(%d, %d+%d, %d)\n", buf, buffer, byte_ini, byte_fin+1);
 			}
 			else {
 				if (memcpy(buf+(TB-byte_ini)+(ultimo_blogico-primer_blogico-1)*TB, buffer, byte_fin+1) < 0) {
@@ -165,7 +164,7 @@ int mi_read_f(unsigned int inodo, void *buf, unsigned int offset, unsigned int n
 		else {
 			//printf("- entra en el else con aux = %d\n", aux);
 			if (memcpy(buf+(TB-byte_ini)+(i-primer_blogico-1)*TB, buffer, TB) < 0) {
-				//printf("ERROR EN ELSE NUM %d\n", i);
+				printf("ERROR EN ELSE NUM %d\n", i);
 				return (-1);
 			}
 			//printf("	memcpy(%d + %d + %d, %d, %d)\n\n", buf, (TB-byte_ini), (i-primer_blogico-1)*TB, buffer, TB);
@@ -198,6 +197,7 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes) {
 		}
 	}
 	else if (nbytes > 0) {
+	
 		if (liberar_bloques(ninodo, nbytes) < 0) {
 			printf("ERROR (ficheros.c -> mi_truncar_f(%d, %d)): Error al truncar a %d bytes (liberar_bloques)\n", ninodo, nbytes, nbytes);
 			return (-1);
@@ -247,6 +247,35 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat) {
 	p_stat->f_creacion = in.f_creacion;
 	p_stat->f_modificacion = in.f_modificacion;
 	p_stat->n_bloques = in.n_bloques;
+	
+	return (1);
+}
+
+
+int prt_stat_f(unsigned int ninodo) {
+
+	struct STAT p_stat;
+	if (mi_stat_f(ninodo, &p_stat) < 0) {
+		printf("ERROR (ficheros.c -> prt_stat_f(%d)): Error al leer el estado del inodo %d\n", ninodo, ninodo);
+		return (-1);
+	}
+	
+	printf(" --- mi_stat_f(%d) -----------------\n\n", ninodo);
+	printf(" p_stat.tipo           = ");
+	if (p_stat.tipo == LIBRE) {
+		printf("LIBRE\n");
+	}
+	else if (p_stat.tipo == DIRECTORIO) {
+		printf("DIRECTORIO\n");
+	}
+	else if (p_stat.tipo == FICHERO) {
+		printf("FICHERO\n");
+	}
+	printf(" p_stat.t_bytes        = %d\n", p_stat.t_bytes);
+	printf(" p_stat.f_creacion     = %d\n", p_stat.f_creacion);
+	printf(" p_stat.f_modificacion = %d\n", p_stat.f_modificacion);
+	printf(" p_stat.n_bloques      = %d\n", p_stat.n_bloques);
+	printf(" -----------------------------------\n\n");
 	
 	return (1);
 }
