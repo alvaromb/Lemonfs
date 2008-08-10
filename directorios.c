@@ -1,51 +1,88 @@
 #include "directorios.h"
+#include "ficheros_basico.h"
+#include "ficheros.h"
+#include "semaforos.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 
-int extraer_camino(const char *camino, char *inicial, char *final) {
+/* Semáforo */
+int mutex;
 
-	int longitud = strlen(camino);
+
+int mount(const char *nombre) {
 	
-	int i = 1; /* Saltamos el carácter '/' */
-	while ((camino[i] != '\0') && (camino[i] != '/') && (i < longitud)) {
-		inicial[i-1] = camino [i];
-		i++;
-	}
-	
-	inicial[i-1] = '\0';
-	
-	int j = 0;
-	while ((camino[i] != '\0') && (i < longitud)) {
-		final[j] = camino[i];
-		i++;
-		j++;
-	}
-	
-	final[j] = '\0';
-	
-	//printf("     EXTRAER_CAMINO: inicial (%s, long = %d) // final (%s, long = %d)\n", inicial, strlen(inicial), final, strlen(final));
-	
-	if (final[0] == '/') {
-		return (DIRECTORIO);
+	if (bmount(nombre) < 0) {
+		printf("ERROR (directorios.c ->): METER EL ERROR\n");
+		return (-1);
 	}
 	else {
-		return (FICHERO);
+		mutex = nuevo_semaforo(ftok("/home/", 's'), 1);
+		inicializar_semaforo(mutex, 1);
+		
+		return (1);
 	}
+}
+
+
+
+int unmount(const char *nombre) {
+
+	bumount();
+	eliminar_semaforo(mutex);
+	
+	return (1);
+}
+
+
+
+int extraer_camino(const char *camino, char *inicial, char *final) {
+	
+	int longitud = strlen(camino);
+		
+	if (longitud > 0) {
+	
+		int i = 1; /* Saltamos el carácter '/' */
+		while ((camino[i] != '\0') && (camino[i] != '/') && (i < longitud)) {
+			inicial[i-1] = camino [i];
+			i++;
+		}
+		
+		inicial[i-1] = '\0';
+		
+		int j = 0;
+		while (camino[i] != '\0') {
+			final[j] = camino[i];
+			i++;
+			j++;
+		}
+		
+		final[j] = '\0';
+		
+		return (1); /* Ejecución finalizada con éxito */
+	}
+	else {
+	
+		return (-1);
+	}		
 }
 
 
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada) {
 
-	char *inicial;
-	char *final;
-	char *final1;
-	char *final2;
-	inicial = (char *)malloc(sizeof(char *));
-	final = (char *)malloc(sizeof(char *));
-	final1 = (char *)malloc(sizeof(char *));
-	final1[0] = '/';
-	final2 = (char *)malloc(sizeof(char *));
-	final2[0] = '\0';
+	//printf(" ---- Vamos a buscar entrada (%s)\n", camino_parcial);
+
+	char inicial[TAM_NOMDIR];
+	memset(inicial, '\0', TAM_NOMDIR);
+	char final[TAM_NOMDIR];
+	memset(final, '\0', TAM_NOMDIR);
+	int encontrada = -1;
 	
-	extraer_camino(camino_parcial, inicial, final);
+	if (extraer_camino(camino_parcial, inicial, final) < 0) {
+		printf("ERROR (directorios.c -> buscar_entrada(%s, %d, %d, %d)): Error al extraer el camino %s.\n", camino_parcial, *p_inodo_dir, *p_inodo, *p_entrada, camino_parcial);
+		return (-1);
+	}
 	
 	/* PRINTS AQUI 
 	printf("\n - Valores iniciales\n");
@@ -74,37 +111,23 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 	//printf(" - n_entradas = %d\n", n_entradas);
 	
 	/* Comprobamos que el inodo sea directorio y que contenga entradas */
-	if ((estado.tipo == DIRECTORIO) && (n_entradas > 0) && (*p_inodo_dir < sb.n_inodos)) {
+	if ((estado.tipo == DIRECTORIO) && (n_entradas > 0) && (*p_inodo_dir < sb.n_inodos) && (strcmp(camino_parcial, "/") != 0)) {
 	
 		int i = 0;
-		int encontrada = -1;
 		struct entrada ent[n_entradas];
 		int inodo = *p_inodo_dir;
 		
+		//printf("  - Estado de la búsqueda: encontrada = %d, n_entradas = %d, estado.t_bytes = %d, inodo = %d.\n", encontrada, n_entradas, estado.t_bytes, inodo);
+		
 		if (mi_read_f(*p_inodo_dir, &ent, 0, estado.t_bytes) < 0) {
-				printf("ERROR (directorios.c -> mi_read_f(%d, &ent, %d*64, 64)): Error al leer la entrada con i = %d\n", *p_inodo_dir, i, i);
+				printf("ERROR (directorios.c -> buscar_entrada // mi_read_f(%d, &ent, %d*64, 64)): Error al leer la entrada con i = %d\n", *p_inodo_dir, i, i);
 				return (-1);
 		}
 		
-		while ((encontrada < 0) && (inodo >= 0)) {
-			//printf("   - Bucle con: i = %d, encontrada = %d\n", i, encontrada);			
-			
-			char *c1;
-			c1 = (char *)malloc(sizeof(char *));
-			char *c2;
-			c2 = (char *)malloc(sizeof(char *));
-			
-			strcpy(c2, ent[i].nombre);
-			
-			while ((strcmp(c2, "/") != 0) && (strcmp(c2, "\0") != 0)) {
-				extraer_camino(c2, c1, c2);
-				//printf("        c2 coño: %s // strcmp(/): %d strcmp(b0): %d\n", c2, strcmp(c2, "/"), strcmp(c2, "\0"));
-			}
-			
-			//printf("     - Valor leído de la entrada: %s y su longitud: %d (inodo: %d)\n", ent[i].nombre, strlen(ent[i].nombre), ent[i].inodo, c1);
-			//printf("     - Valor de inicial: %s y su longitud: %d // c1 = %s // c2 = %s\n", inicial, strlen(inicial), c1, c2);
-			
-			if (strcmp(inicial, c1) == 0) {
+		while ((encontrada < 0) && (inodo >= 0) && (i < n_entradas)) {
+			//printf("   - Bucle con: i = %d, encontrada = %d\n", i, encontrada);
+						
+			if (strcmp(inicial, ent[i].nombre) == 0) {
 				//printf("     - Encontrada!!! ent.nombre: %s // ent.inodo: %d\n", ent[i].nombre, ent[i].inodo);
 				encontrada = 1;
 			}
@@ -116,24 +139,21 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 		/* Hemos hallado la entrada */
 		if (encontrada > 0) {
 			/* Caso básico */
-			//if (((strcmp(final, final1)) == 0) || ((strcmp(final, final2)) == 0)) {
 			if (((final[0] == '/') && (strlen(final) == 1)) || (final[0] == '\0')) {
 				//printf("    Caso final\n");
 				*p_inodo = ent[i].inodo;
 				*p_entrada = i;
+				encontrada = 1;
 			}
 			
-				
 			/* Caso general */
 			else {
 				//printf("    Caso general con final %s, y longitud %d y ent.inodo %d\n\n", final, strlen(final), ent[i].inodo);
 				*p_inodo_dir = ent[i].inodo;
-				buscar_entrada(final, p_inodo_dir, p_inodo, p_entrada);
+				encontrada = buscar_entrada(final, p_inodo_dir, p_inodo, p_entrada);
 			}
 			
 			//printf("-------------------------------\n");
-			
-			return (1); /* Ejecución terminada con éxito */
 		}
 		
 		/* No existe la entrada en el inodo */
@@ -141,27 +161,28 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 			*p_entrada = i;
 			//printf("Info (directorios.c -> buscar_entrada): La entrada %s no existe, devolvemos la última entrada.\n", camino_parcial);
 			
-			return (-1);
+			encontrada = -1;
 		}
 	}
 	
 	/* Inodo raíz */
 	else if (strcmp(camino_parcial, "/") == 0) {
-		
 		//printf("   Es inodo raíz!!!\n");
 		*p_inodo_dir = 0;
-		return (1);
+		encontrada = 1;
 	}
 	else {
-		//printf("   No hay entradas.\n");
-		return (-1); 
+		//printf("   No hay entradas (%s // %d).\n", camino_parcial, camino_parcial[1]);
+		encontrada = -1;
 	}
+	
+	return (encontrada); /* peligro con esto */
 }
 
 
-int extraer_directorio(const char *camino, char *inicial) {
+int extraer_directorio(const char *camino, char *inicial, char *nombre) {
 
-	if (camino[0] == '/') {
+	if ((camino[0] == '/') && (strcmp(camino, "/") != 0)) {
 	
 		int longitud = strlen(camino);
 		
@@ -177,12 +198,27 @@ int extraer_directorio(const char *camino, char *inicial) {
 			i--;
 		}
 		
-		longitud = i;
+		//printf(" ED: la longitud es = %d y la i = %d\n", longitud, i);
+		
+		int p = i;
 		i = 0;
-		while (i <= longitud) {
+		while (i <= p) {
 			inicial[i] = camino[i];
 			i++;
 		}
+		
+		//printf(" ED: inicial finalizado = %s con i = %d\n", inicial, i);
+	
+		int j = 0;
+		while (camino[i] != '/' && i < longitud) {
+			nombre[j] = camino[i];
+			j++;
+			i++;	
+		}
+		
+		//printf(" ED: nombre finalizado = %s, j = %d, i = %d\n", nombre, j, i);
+	
+		nombre[j] = '\0';
 		
 		return (1);	
 	}
@@ -193,7 +229,10 @@ int extraer_directorio(const char *camino, char *inicial) {
 }
 
 
+/* METER SEMÁFOROS AQUÍ */
 int mi_creat(const char *camino) {
+
+	esperar_semaforo(mutex, 0, 0);
 
 	int longitud = strlen(camino);
 
@@ -205,22 +244,29 @@ int mi_creat(const char *camino) {
 		unsigned int p_entrada;
 		
 		/* Comprobamos que exista el camino */
-		char *inicial;
-		inicial = malloc(sizeof(char *));
-		if (extraer_directorio(camino, inicial) < 0) {
+		char inicial[TAM_NOMDIR];
+		memset(inicial, '\0', TAM_NOMDIR);
+		char final[TAM_NOMDIR];
+		memset(final, '\0', TAM_NOMDIR);
+				
+		if (extraer_directorio(camino, inicial, final) < 0) {
 			printf("ERROR (directorios.c -> mi_creat(%s)): Error al extraer el directorio.\n", camino);
+			senalizar_semaforo(mutex, 0);
 			return (-1);
 		}
 		
 		p_inodo_dir = 0;
 		p_inodo = 0;
 		p_entrada = 0;
-		printf(" - Parámetros de buscar el camino: inicial = %s, p_inodo_dir = %d, p_inodo = %d, p_entrada = %d\n", inicial, p_inodo_dir, p_inodo, p_entrada);
+		//printf(" - Parámetros de buscar el camino: inicial = %s, final = %s, p_inodo_dir = %d, p_inodo = %d, p_entrada = %d\n", inicial, final, p_inodo_dir, p_inodo, p_entrada);
 		
-		if (buscar_entrada(inicial, &p_inodo_dir, &p_inodo, &p_entrada) < 0) {
+		int cacuna = buscar_entrada(inicial, &p_inodo_dir, &p_inodo, &p_entrada);
+		//printf(" - Cacuna = %d\n", cacuna);
+		if (cacuna < 0) {
 			/* No existe el camino, ERROR */
 			printf("mi_creat: no se puede crear el directorio <<%s>>: No existe el fichero ó directorio\n", camino);
-			printf("DEBUG: inicial = %s\n", inicial);
+			//printf("DEBUG: inicial = %s\n", inicial);
+			senalizar_semaforo(mutex, 0);
 			return (-1);
 		}
 		
@@ -229,20 +275,22 @@ int mi_creat(const char *camino) {
 			p_inodo_dir = 0;
 			p_inodo = 0;
 			p_entrada = 0;
-			printf(" - Parámetros de buscar la entrada: camino = %s, p_inodo_dir = %d, p_inodo = %d, p_entrada = %d\n", camino, p_inodo_dir, p_inodo, p_entrada);
+			//printf(" - Parámetros de buscar la entrada: camino = %s, p_inodo_dir = %d, p_inodo = %d, p_entrada = %d\n", camino, p_inodo_dir, p_inodo, p_entrada);
 			int mierda = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada);
-			printf(" - mierda = %d\n", mierda);
-			if (mierda < 0) {
+			//printf(" - mierda = %d\n", mierda);
+			if (mierda <= 0) {
 				
 				struct inodo in;
 				
 				/* Es del tipo DIRECTORIO */
 				if (camino[longitud-1] == '/') {
 					in.tipo = DIRECTORIO;
+					//printf("  - Tipo inodo DIRECTORIO\n");
 				}
 				/* Es del tipo FICHERO */
 				else {
 					in.tipo = FICHERO;
+					//printf("  - Tipo inodo FICHERO\n");
 				}
 				
 				in.t_bytes = 0;
@@ -255,60 +303,361 @@ int mi_creat(const char *camino) {
 				struct STAT estado;
 				if (mi_stat_f(p_inodo_dir, &estado) < 0) {
 					printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer el estado del inodo %d.\n", camino, p_inodo_dir);
+					senalizar_semaforo(mutex, 0);
 					return (-1);
 				}
 				
 				int n_entradas = (estado.t_bytes/sizeof(struct entrada));
 				struct entrada ent[n_entradas+1];
 				
+				//printf("  - n_entradas: %d // n_entradas+1: %d // final: %s\n", n_entradas, n_entradas+1, final);
+				
+				/* ESTE IF SOBRA, QUITARLO!!! */
 				if (n_entradas > 0) {
+				
+					//printf("   - Hay más de 1 entrada\n");
+				
 					if (mi_read_f(p_inodo_dir, &ent, 0, estado.t_bytes) < 0) {
 						printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer las %d entradas del inodo %d.\n ", camino, n_entradas, p_inodo_dir);
+						senalizar_semaforo(mutex, 0);
 						return (-1);
 					}
-					
-					ent[n_entradas+1].inodo = inodo_r;
-					strcpy(ent[n_entradas+1].nombre, camino);
-				}
-				else{
-					ent[n_entradas].inodo = inodo_r;
-					strcpy(ent[n_entradas].nombre, camino);
 				}
 				
-				/* Introducimos los datos en la entrada */
+				ent[n_entradas].inodo = inodo_r;
+				strcpy(ent[n_entradas].nombre, final);
 				
+				/* Introducimos los datos en la entrada */		
 				
-				printf(" - ent[%d].inodo = %d\n", n_entradas, ent[n_entradas].inodo);
-				printf(" - ent[%d].nombre = %s   // camino = %s\n", n_entradas, ent[n_entradas].nombre, camino);
+				//printf(" - ent[%d].inodo = %d // inodo_r = %d\n", n_entradas, ent[n_entradas].inodo, inodo_r);
+				//printf(" - ent[%d].nombre = %s   // camino = %s\n", n_entradas, ent[n_entradas].nombre, camino);
 				
 				/* Escribimos la entrada */
 				if (mi_write_f(p_inodo_dir, &ent, 0, ((n_entradas+1)*sizeof(struct entrada))) < 0) {
 					printf("ERROR (directorios.c -> mi_creat(%s)): Error al escribir la entrada nueva.\n", camino);
+					senalizar_semaforo(mutex, 0);
 					return (-1);
 				}
-				/* PROVISIONAL */
-				else {
-					printf(" - Entrada escrita con: p_inodo_dir = %d, y tamaño = %d\n", p_inodo_dir, (n_entradas+1)*sizeof(struct entrada));
-					
-					struct entrada e[1];
-					mi_read_f(p_inodo_dir, &e, 0, ((n_entradas+1)*sizeof(struct entrada)));
-					printf(" - Comprobación entrada: nombre = %s, inodo = %d\n", e[0].nombre, e[0].inodo);
-					
-					printf("FICHERO/DIRECTORIO %s ESCRITO CON ÉXITO !!!\n", camino);
-				}
+				//printf(" - Entrada escrita con: p_inodo_dir = %d, y tamaño = %d\n", p_inodo_dir, (n_entradas+1)*sizeof(struct entrada));
 			}
 			
 			/* Existe la entrada, no podemos crearla */
 			else {
-				printf("mi_creat: no se puede crear la entrada <<%s>>: El fichero ya existe\n", inicial);
-				printf("DEBUG: camino = %s y mierda = %d\n", camino, mierda);
+				printf("mi_creat: no se puede crear la entrada <<%s>>: El fichero ya existe\n", final);
+				//printf("DEBUG: camino = %s y mierda = %d\n", camino, mierda);
+				senalizar_semaforo(mutex, 0);
 				return (-1);
 			}
 		}
 	}
 	
+	senalizar_semaforo(mutex, 0);
 	return (1); /* Ejecución terminada con éxito */
 }
+
+
+/* METER SEMÁFOROS AQUÍ */
+int mi_unlink(const char *camino) {
+
+	esperar_semaforo(mutex, 0, 0);
+
+	/* Misma filosofía que mi_creat */
+	//printf("\n\n --- INICIO: mi_unlink(%s) ------------------------------\n", camino);
+	
+	int longitud = strlen(camino);
+	
+	if ((longitud > 0) && (strcmp(camino, "/") != 0)) {
+		
+		unsigned int p_inodo_dir = 0;
+		unsigned int p_inodo;
+		unsigned int p_entrada;
+		
+		/* Comprobamos que exista la entrada */		
+		int cacuna = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada);
+		//printf(" - Cacuna = %d\n", cacuna);
+		if (cacuna < 0) {
+			/* No existe la entrada, ERROR */
+			printf("mi_unlink: no se puede borrar <<%s>>: No existe el fichero ó directorio\n", camino);
+			senalizar_semaforo(mutex, 0);
+			return (-1);
+		}
+		else {
+		
+			/* Existe la entrada, podemos borrarla */
+			struct STAT estado;
+			if (mi_stat_f(p_inodo_dir, &estado) < 0) {
+				printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer el estado del inodo %d.\n", camino, p_inodo_dir);
+				senalizar_semaforo(mutex, 0);
+				return (-1);
+			}
+			
+			int n_entradas = (estado.t_bytes/sizeof(struct entrada));
+			struct entrada ent[n_entradas];
+			if (mi_read_f(p_inodo_dir, &ent, 0, ((n_entradas)*sizeof(struct entrada))) < 0) {
+				printf("ERROR (directorios.c -> mi_unlink(%s)): Error al leer las %d entradas del inodo %d.\n", camino, ((n_entradas)*sizeof(struct inodo)), p_inodo_dir);
+				senalizar_semaforo(mutex, 0);
+				return (-1);
+			}
+			
+			//printf("  - n_entradas: %d // n_entradas-1: %d\n", n_entradas, n_entradas-1);
+			//printf("  - p_entrada: %d // ent[%d].nombre = %s, ent[%d].inodo = %d\n", p_entrada, p_entrada, ent[p_entrada].nombre, p_entrada, ent[p_entrada].inodo);
+			
+			if (estado.t_bytes > sizeof(struct entrada)) {
+				/* Guardamos la última entrada y re-localizamos */
+				//printf("Nombre-1 = %s // inodo-1 = %d // n_entradas = %d\n", ent[n_entradas-1].nombre, ent[n_entradas-1].inodo, n_entradas);
+				struct entrada pivote;
+				memset(pivote.nombre, '\0', TAM_NOMDIR);
+				strcpy(pivote.nombre, ent[n_entradas-1].nombre);
+				
+				pivote.inodo = ent[n_entradas-1].inodo;
+				strcpy(ent[p_entrada].nombre, pivote.nombre);
+				ent[p_entrada].inodo = pivote.inodo;
+				
+				//printf("  - Pivote: nombre = %s // inodo = %d\n", pivote.nombre, pivote.inodo);
+				//printf("  - Vamos a escribir en %d y %d bytes.\n", p_inodo_dir, ((n_entradas-1)*sizeof(struct entrada)));
+				
+				if (mi_write_f(p_inodo_dir, &ent, 0, ((n_entradas-1)*sizeof(struct entrada))) < 0) {
+					printf("ERROR (directorios.c -> mi_unlink(%s)): Error al escribir la nueva localización de la entrada en la posición %d\n", camino, p_entrada);
+					senalizar_semaforo(mutex, 0);
+					return (-1);
+				}
+			}
+			
+			/* Actualizamos el inodo del directorio donde estaba el fichero/directorio borrado. 
+			 * Ocurre cuando sólo hay una entrada en dicho directorio y no se actualiza mediante mi_write_f
+			 */
+			else {
+				struct inodo dir;
+				if (leer_inodo(&dir, p_inodo_dir) < 0) {
+					printf("ERROR (directorios.c -> mi_unlink(%s)): Error al leer el inodo %d para actualizarlo.\n", camino, p_inodo_dir);
+					senalizar_semaforo(mutex, 0);
+					return (-1);
+				}
+				
+				dir.t_bytes -= 64;
+				dir.n_bloques -= 1;
+				dir.f_modificacion = time(NULL);
+				
+				if (escribir_inodo(dir, p_inodo_dir) < 0) {
+					printf("ERROR (directorios.c -> mi_unlink(%s)): Error al escribir el inodo %d para actualizarlo.\n", camino, p_inodo_dir);
+					senalizar_semaforo(mutex, 0);
+					return (-1);
+				}
+			}
+		
+			//printf(" - P_INODO vale %d.\n", p_inodo);
+			
+			/* PRUEBAS 
+			struct inodo in;
+			leer_inodo(&in, p_inodo);*/
+			
+			//printf(" - in.n_asignados = %d // in.t_bytes = %d\n", in.n_bloques, in.t_bytes);
+			
+			/* Debemos liberar el inodo con 64 bytes menos de los que tiene */
+			if (liberar_inodo(p_inodo) < 0) {
+				printf("ERROR (directorios.c -> mi_unlink(%s)): Error al liberar el inodo %d.\n", camino, p_inodo);
+				senalizar_semaforo(mutex, 0);
+				return (-1);
+			}
+			
+			/* Truncamos el inodo que contiene p_inodo */
+			if (mi_truncar_f(p_inodo_dir, ((n_entradas-1)*sizeof(struct entrada))) < 0) {
+				printf("ERROR (directorios.c -> mi_unlink(%s)): Error al truncar el inodo %d en %d bytes.\n", p_inodo_dir, ((n_entradas-1)*sizeof(struct entrada)));
+				senalizar_semaforo(mutex, 0);
+				return (-1);
+			}
+		}
+	}
+	
+	senalizar_semaforo(mutex, 0);
+	return (1); /* Ejecución terminada con éxito */
+}
+
+
+
+int mi_dir(const char *camino, char *buffer) {
+
+	int longitud = strlen(camino);
+	
+	if (longitud > 0) {
+	
+		if (camino[longitud-1] == '/') {
+			
+			unsigned int p_inodo_dir = 0;
+			unsigned int p_inodo;
+			unsigned int p_entrada;
+			
+			int cacuna = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada);
+			
+			if (cacuna < 0) {
+				printf("mi_dir: no se puede listar <<%s>>: No existe el directorio\n", camino);
+				return (-1);
+			}
+			else {
+			
+				struct STAT estado;
+				if (mi_stat_f(p_inodo_dir, &estado) < 0) {
+					printf("ERROR (directorios.c -> mi_dir(%s, buffer)): Error al leer el estado del inodo %d.\n", camino, p_inodo_dir);
+					return (-1);
+				}
+				
+				int n_entradas = (estado.t_bytes/sizeof(struct entrada));
+				
+				if (n_entradas > 0) {
+					
+					struct entrada ent[n_entradas];
+					if (mi_read_f(p_inodo_dir, &ent, 0, estado.t_bytes) < 0) {
+						printf("ERROR (directorios.c -> mi_dir(%s, buffer)): Error al leer las %d entradas del inodo %d.\n", camino, n_entradas, p_inodo);
+						return (-1);
+					}
+					
+					int i;
+					for (i = 0; i < n_entradas; i++) {
+					
+						strcat(buffer, "   ");
+						strcat(buffer, ent[i].nombre);
+						
+						struct inodo in;
+						leer_inodo(&in, ent[i].inodo);
+						if (in.tipo == DIRECTORIO) {
+							strcat(buffer, "/");
+						}
+						else {
+							strcat(buffer, "  t_bytes = ");
+							char aux[10];
+							memset(aux, '\0', 10);
+							sprintf(aux, "%d", in.t_bytes);
+							strcat(buffer, aux);
+						}
+						
+						strcat(buffer, ":\n");
+					}
+					
+					/* Devolvemos el nº de entradas */
+					return (n_entradas);
+				}
+				else {
+					printf("mi_dir: el directorio <<%s>> está vacío\n", camino);
+				}
+			}
+		}
+		else {
+			printf("mi_dir: no se puede listar <<%s>>: No es un directorio\n", camino);
+			return (-1);
+		}
+	}
+}
+
+
+/* METER SEMÁFOROS AQUÍ */
+int mi_stat(const char *camino, struct STAT *p_stat) {
+
+	esperar_semaforo(mutex, 0, 0);
+
+	int longitud = strlen(camino);
+	
+	if (longitud > 0) {
+		
+		unsigned int p_inodo_dir = 0;
+		unsigned int p_inodo;
+		unsigned int p_entrada;
+		
+		int cacuna = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada);
+		
+		if (cacuna < 0) {
+			/* No existe el fichero/directorio */
+			printf("mi_stat: no se puede mostrar el estado de <<%s>>: No existe el fichero ó directorio\n", camino);
+			senalizar_semaforo(mutex, 0);
+			return (-1);
+		}
+		else {
+		
+			if (mi_stat_f(p_inodo, p_stat) < 0) {
+				printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer el estado del inodo %d.\n", camino, p_inodo_dir);
+				senalizar_semaforo(mutex, 0);
+				return (-1);
+			}
+			
+			senalizar_semaforo(mutex, 0);
+			return (1); /* Ejecución finalizada con éxito */
+		}
+	}
+}
+
+
+
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
+
+	esperar_semaforo(mutex, 0, 0);
+
+	int longitud = strlen(camino);
+	
+	if (longitud > 0) {
+		
+		unsigned int p_inodo_dir = 0;
+		unsigned int p_inodo = 0;
+		unsigned int p_entrada = 0;
+		
+		int cacuna = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada);
+		
+		if (cacuna < 0) {
+			printf("mi_write: no se puede escribir el búfer en <<%s>>: No existe el fichero ó directorio\n", camino);
+			senalizar_semaforo(mutex, 0);
+			return (-1);
+		}
+		else {
+		
+			/*printf("mi_write: mi_write_f(%d, %s, %d, %d).\n", p_inodo, buf, offset, nbytes);  Están bien aquí */
+		
+			if (mi_write_f(p_inodo, buf, offset, nbytes) < 0) {
+				printf("ERROR (directorios.c -> mi_write(%s, buf, %d, %d)): Error al ejecutar mi_write_f(%d, buf, %d, %d).\n", camino, offset, nbytes, p_inodo, offset, nbytes);
+				senalizar_semaforo(mutex, 0);
+				return (-1);
+			}
+			
+			senalizar_semaforo(mutex, 0);
+			return (1); /* Ejecución finalizada con éxito */
+		}
+	}
+}
+
+
+
+int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes) {
+
+	int longitud = strlen(camino);
+	
+	if (longitud > 0) {
+		
+		unsigned int p_inodo_dir = 0;
+		unsigned int p_inodo;
+		unsigned int p_entrada;
+		
+		int cacuna = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada);
+		
+		if (cacuna < 0) {
+			printf("mi_read: no se puede leer en <<%s>>: No existe el fichero ó directorio\n", camino);
+			return (-1);
+		}
+		else {
+		
+			if (mi_read_f(p_inodo, buf, offset, nbytes) < 0) {
+				printf("ERROR (directorios.c -> mi_read(%s, buf, %d, %d)): Error al ejecutar mi_read(%d, buf, %d, %d).\n", camino, offset, nbytes, p_inodo, offset, nbytes);
+				return (-1);
+			}
+			
+			return (1); /* Ejecución finalizada con éxito */
+		}
+	}
+}
+
+
+
+
+
+
+
+
 
 
 

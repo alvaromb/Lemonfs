@@ -10,8 +10,10 @@ int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigne
 	int byte_ini = primer_byte%TB;
 	int byte_fin = ultimo_byte%TB;
 	int bytes_escritos = 0;
-	int primer_ultimo = 0;	/* PROVISIONAL!!! PARA VER ERRORES */
+	int primer_ultimo = 0;	 /* PROVISIONAL!!! PARA VER ERRORES */
 	unsigned char buffer[TB];
+	
+	const int cinodo = inodo;
 	
 	/* Valores calculados 
 	printf("/-------------------------------------/\n");
@@ -27,6 +29,7 @@ int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigne
 	
 		//printf("Vamos a traducir_bloque_inodo(%d, %d, 1)\n", inodo, i);
 		aux = traducir_bloque_inodo(inodo, i, 1);
+		//printf("aux = %d // inodo = %d // cinodo = %d\n", aux, inodo, cinodo);
 		
 		if ((primer_blogico != ultimo_blogico) && (i == primer_blogico)) {
 			//printf("- entra en primer_blogico con aux = %d\n", aux);
@@ -42,8 +45,11 @@ int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigne
 			//printf("	byte_fin: %d\n",byte_fin);
 			
 			if (primer_blogico == ultimo_blogico) {
-				memcpy(buffer+byte_ini, buf, byte_fin+1); /* meter control de errores */
-				//printf("	SOLO 1 BLOQUE memcpy(%d+%d, %d, %d)\n\n", buffer, byte_ini, buf, byte_fin+1);
+				if (memcpy(buffer+byte_ini, buf, nbytes) < 0) {
+				 	printf("ERROR (ficheros.c -> mi_write_f(%d, %s, %d, %d)): Error al ejecutar memcpy de pblogico == ublogico.\n", inodo, buf, offset, nbytes);
+				 	return (-1);
+				 } /* meter control de errores */ 
+				 //printf("	SOLO 1 BLOQUE memcpy(%d+%d, %s, %d)\n", buffer, byte_ini, buf, nbytes);
 			}
 			else {
 				memcpy(buffer, buf+(TB-byte_ini)+(ultimo_blogico-primer_blogico-1)*TB, byte_fin+1); /* meter control de errores */
@@ -70,11 +76,12 @@ int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigne
 	else {
 		bytes_escritos = (++byte_fin) - byte_ini;
 	}
-	//printf("(despues) bytes_escritos = %d (bloques del else)\n\n\n\n", bytes_escritos);
+	//printf("(despues) bytes_escritos = %d (bloques del else)\n", bytes_escritos);
+	//printf("INODO = %d // CINODO = %d\n\n\n\n", inodo, cinodo);
 	
 	/* Actualizamos los datos del inodo */
 	struct inodo in;
-	if (leer_inodo(&in, inodo) < 0) {
+	if (leer_inodo(&in, cinodo) < 0) {
 		printf("ERROR (ficheros.c -> mi_write_f(%d, buf, %d, %d)): Error al leer el inodo %d para actualizar sus datos.\n", inodo, offset, nbytes, inodo);
 		return (-1);
 	}
@@ -89,13 +96,14 @@ int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigne
 		in.n_bloques = in.t_bytes/TB;
 	}
 	
-	if (escribir_inodo(in, inodo) < 0) {
+	if (escribir_inodo(in, cinodo) < 0) {
 		printf("ERROR (ficheros.c -> mi_write_f(%d, buf, %d, %d)): Error al escribir el inodo %d para actualizar sus datos.\n", inodo, offset, nbytes, inodo);
 		return (-1);
 	}
 	
 	return (bytes_escritos);	
 }
+
 
 
 int mi_read_f(unsigned int inodo, void *buf, unsigned int offset, unsigned int nbytes) {
@@ -149,7 +157,7 @@ int mi_read_f(unsigned int inodo, void *buf, unsigned int offset, unsigned int n
 			//printf("	byte_fin: %d\n",byte_fin);
 			
 			if (primer_blogico == ultimo_blogico) {
-				memcpy(buf, buffer + byte_ini, byte_fin+1);
+				memcpy(buf, buffer + byte_ini, nbytes);
 				//printf("	SOLO 1 BLOQUE memcpy(%d, %d+%d, %d)\n", buf, buffer, byte_ini, byte_fin+1);
 			}
 			else {

@@ -618,7 +618,11 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes) {
 		}
 		else {
 			printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): El inodo %d no tiene bloques asignados\n", ninodo, nbytes, ninodo);
-			return (-1); /* DUDA SI ESTO HAY QUE PONERLO */
+			in.n_bloques = 0;
+			in.t_bytes = 0;
+			in.f_modificacion = time(NULL);
+			
+			escribir_inodo(in, ninodo);
 		}
 		
 	}
