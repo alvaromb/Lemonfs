@@ -44,10 +44,13 @@ int proceso (int n) {
 	}
 	else {
 	
+		//prt_stat_f(0);	
+		//prt_stat_f(1);
+		
 		sprintf(linea, "Inicio log proceso PID %d\n", getpid());
 		printf("Fichero <<%s>> creado! // %d // %s ", nombre, strlen(linea), linea);
 		
-		printf("strlen(linea): %d\n	", strlen(linea));
+		//printf("strlen(linea): %d\n	", strlen(linea));
 		
 		if (mi_write(nombre, linea, 0, strlen(linea)) < 0) {
 			char buffer[10000];
@@ -133,11 +136,26 @@ int main (int argc,char **argv) {
 	
 		mount(argv[1]);
 		
-		vaciar(); /* METER CONTROL DE ERRORES */
-		char buffer[10000];
-		memset(buffer, '\0', 10000);
-		mi_dir("/", buffer);
-		printf("%s", buffer);
+		struct inodo in;
+		if (leer_inodo(&in, 0) < 0) {
+			printf("ERROR (simulacion.c -> mi_stat(/)): Error al leer el estado\n");
+		}
+		
+		struct superbloque SB;
+		if (bread(0, (char *)&SB) < 0) {
+			printf("ERROR (simulacion.c -> error al leer el superbloque)\n");
+		}
+		
+		if (in.t_bytes > 0) {
+			vaciar();
+			initSB(SB.n_bloques, argv[1]);
+			initMB(SB.n_bloques);
+			initAI(SB.n_bloques);
+		}
+		
+		
+		
+		//prt_stat_f(0);
 			
 			int i;
 			for (i = 0; i < N_PROCESOS; i++) {

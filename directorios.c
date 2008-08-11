@@ -84,12 +84,12 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 		return (-1);
 	}
 	
-	/* PRINTS AQUI */
+	/* PRINTS AQUI 
 	printf("\n - Valores iniciales\n");
 	printf("    camino_parcial : %s     longitud: %d\n", camino_parcial, strlen(camino_parcial));
 	printf("    inicial        : %s                   longitud: %d\n", inicial, strlen(inicial));
 	printf("    final          : %s          longitud: %d\n", final, strlen(final)); 
-	/*printf("    *p_inodo_dir   : %d\n", *p_inodo_dir);
+	printf("    *p_inodo_dir   : %d\n", *p_inodo_dir);
 	printf("    *p_inodo       : %d\n", *p_inodo);
 	printf("    *p_entrada     : %d\n\n", *p_entrada);
 	 FIN PRINTS */
