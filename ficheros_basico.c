@@ -590,14 +590,13 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes) {
 							printf("ERROR (ficheros_basico.c -> liberar_bloques(%d, %d)): Error al liberar el bloque %d del puntero indirecto %d\n", ninodo, nbytes, in.pb_ind[j], j);
 							return (-1);
 						}
-						printf("liberamos el puntero indirecto j = %d\n", j);
+						//printf("liberamos el puntero indirecto j = %d\n", j);
 						in.pb_ind[j] = 0;
-						/* FALTA ACTUALIZAR EL INODO, BLOQUES LIBERADOS, ETC... */
 					}
 				}
-				else { /* QUIZÁS ESTO SOBRE TAMBIÉN */
+				/*else {  QUIZÁS ESTO SOBRE TAMBIÉN 
 					printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): No hay puntero indirecto (fuera de rango) %d\n", ninodo, nbytes, j);
-				}
+				}*/
 			}			
 			
 			/* Actualizamos el inodo */
@@ -617,7 +616,7 @@ int liberar_bloques(unsigned int ninodo, unsigned int nbytes) {
 			
 		}
 		else {
-			printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): El inodo %d no tiene bloques asignados\n", ninodo, nbytes, ninodo);
+			//printf("Info (ficheros_basico.c -> liberar_bloques(%d, %d)): El inodo %d no tiene bloques asignados\n", ninodo, nbytes, ninodo);
 			in.n_bloques = 0;
 			in.t_bytes = 0;
 			in.f_modificacion = time(NULL);

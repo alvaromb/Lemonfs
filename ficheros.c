@@ -108,6 +108,8 @@ int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigne
 
 int mi_read_f(unsigned int inodo, void *buf, unsigned int offset, unsigned int nbytes) {
 	
+	//esperar_semaforo(mutex, 0, 0);
+	
 	int primer_byte = offset;
 	int ultimo_byte = offset + nbytes - 1;
 	int primer_blogico = offset/TB;

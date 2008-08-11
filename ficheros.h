@@ -18,7 +18,6 @@ struct STAT {
 	unsigned int n_bloques;
 };
 
-
 int mi_write_f(unsigned int inodo, const void *buf, unsigned int offset, unsigned int nbytes);
 
 int mi_read_f(unsigned int inodo, void *buf, unsigned int offset, unsigned int nbytes);

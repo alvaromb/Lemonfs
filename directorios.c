@@ -84,15 +84,15 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 		return (-1);
 	}
 	
-	/* PRINTS AQUI 
+	/* PRINTS AQUI */
 	printf("\n - Valores iniciales\n");
 	printf("    camino_parcial : %s     longitud: %d\n", camino_parcial, strlen(camino_parcial));
 	printf("    inicial        : %s                   longitud: %d\n", inicial, strlen(inicial));
-	printf("    final          : %s          longitud: %d\n", final, strlen(final));
-	printf("    *p_inodo_dir   : %d\n", *p_inodo_dir);
+	printf("    final          : %s          longitud: %d\n", final, strlen(final)); 
+	/*printf("    *p_inodo_dir   : %d\n", *p_inodo_dir);
 	printf("    *p_inodo       : %d\n", *p_inodo);
 	printf("    *p_entrada     : %d\n\n", *p_entrada);
-	/* FIN PRINTS */
+	 FIN PRINTS */
 	
 	//printf(" - Vamos a buscar %s en el inodo\n", inicial);
 	struct STAT estado;
@@ -235,6 +235,7 @@ int mi_creat(const char *camino) {
 	esperar_semaforo(mutex, 0, 0);
 
 	int longitud = strlen(camino);
+	int devolver = -1;
 
 	if ((longitud > 0) && (strcmp(camino, "/") != 0)) {
 	
@@ -251,108 +252,107 @@ int mi_creat(const char *camino) {
 				
 		if (extraer_directorio(camino, inicial, final) < 0) {
 			printf("ERROR (directorios.c -> mi_creat(%s)): Error al extraer el directorio.\n", camino);
-			senalizar_semaforo(mutex, 0);
-			return (-1);
+			devolver = -1;
 		}
-		
-		p_inodo_dir = 0;
-		p_inodo = 0;
-		p_entrada = 0;
-		//printf(" - Parámetros de buscar el camino: inicial = %s, final = %s, p_inodo_dir = %d, p_inodo = %d, p_entrada = %d\n", inicial, final, p_inodo_dir, p_inodo, p_entrada);
-		
-		int cacuna = buscar_entrada(inicial, &p_inodo_dir, &p_inodo, &p_entrada);
-		//printf(" - Cacuna = %d\n", cacuna);
-		if (cacuna < 0) {
-			/* No existe el camino, ERROR */
-			printf("mi_creat: no se puede crear el directorio <<%s>>: No existe el fichero ó directorio\n", camino);
-			//printf("DEBUG: inicial = %s\n", inicial);
-			senalizar_semaforo(mutex, 0);
-			return (-1);
-		}
-		
 		else {
-			/* Existe el camino, buscamos que no exista la entrada */
+		
 			p_inodo_dir = 0;
 			p_inodo = 0;
 			p_entrada = 0;
-			//printf(" - Parámetros de buscar la entrada: camino = %s, p_inodo_dir = %d, p_inodo = %d, p_entrada = %d\n", camino, p_inodo_dir, p_inodo, p_entrada);
-			int mierda = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada);
-			//printf(" - mierda = %d\n", mierda);
-			if (mierda <= 0) {
-				
-				struct inodo in;
-				
-				/* Es del tipo DIRECTORIO */
-				if (camino[longitud-1] == '/') {
-					in.tipo = DIRECTORIO;
-					//printf("  - Tipo inodo DIRECTORIO\n");
-				}
-				/* Es del tipo FICHERO */
-				else {
-					in.tipo = FICHERO;
-					//printf("  - Tipo inodo FICHERO\n");
-				}
-				
-				in.t_bytes = 0;
-				in.n_bloques = 0;
-				in.f_creacion = time(NULL);
-				in.f_modificacion = time(NULL);
-				int inodo_r = reservar_inodo(in);
-				
-				/* FINALMENTE ESCRIBIMOS EL FICHERO/DIRECTORIO */
-				struct STAT estado;
-				if (mi_stat_f(p_inodo_dir, &estado) < 0) {
-					printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer el estado del inodo %d.\n", camino, p_inodo_dir);
-					senalizar_semaforo(mutex, 0);
-					return (-1);
-				}
-				
-				int n_entradas = (estado.t_bytes/sizeof(struct entrada));
-				struct entrada ent[n_entradas+1];
-				
-				//printf("  - n_entradas: %d // n_entradas+1: %d // final: %s\n", n_entradas, n_entradas+1, final);
-				
-				/* ESTE IF SOBRA, QUITARLO!!! */
-				if (n_entradas > 0) {
-				
-					//printf("   - Hay más de 1 entrada\n");
-				
-					if (mi_read_f(p_inodo_dir, &ent, 0, estado.t_bytes) < 0) {
-						printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer las %d entradas del inodo %d.\n ", camino, n_entradas, p_inodo_dir);
-						senalizar_semaforo(mutex, 0);
-						return (-1);
-					}
-				}
-				
-				ent[n_entradas].inodo = inodo_r;
-				strcpy(ent[n_entradas].nombre, final);
-				
-				/* Introducimos los datos en la entrada */		
-				
-				//printf(" - ent[%d].inodo = %d // inodo_r = %d\n", n_entradas, ent[n_entradas].inodo, inodo_r);
-				//printf(" - ent[%d].nombre = %s   // camino = %s\n", n_entradas, ent[n_entradas].nombre, camino);
-				
-				/* Escribimos la entrada */
-				if (mi_write_f(p_inodo_dir, &ent, 0, ((n_entradas+1)*sizeof(struct entrada))) < 0) {
-					printf("ERROR (directorios.c -> mi_creat(%s)): Error al escribir la entrada nueva.\n", camino);
-					senalizar_semaforo(mutex, 0);
-					return (-1);
-				}
-				//printf(" - Entrada escrita con: p_inodo_dir = %d, y tamaño = %d\n", p_inodo_dir, (n_entradas+1)*sizeof(struct entrada));
+			//printf(" - Parámetros de buscar el camino: inicial = %s, final = %s, p_inodo_dir = %d, p_inodo = %d, p_entrada = %d\n", inicial, final, p_inodo_dir, p_inodo, p_entrada);
+			
+			int cacuna = buscar_entrada(inicial, &p_inodo_dir, &p_inodo, &p_entrada);
+			//printf(" - Cacuna = %d\n", cacuna);
+			if (cacuna < 0) {
+				/* No existe el camino, ERROR */
+				printf("mi_creat: no se puede crear el directorio <<%s>>: No existe el fichero ó directorio\n", camino);
+				//printf("DEBUG: inicial = %s\n", inicial);
+				devolver = -1;
 			}
 			
-			/* Existe la entrada, no podemos crearla */
 			else {
-				printf("mi_creat: no se puede crear la entrada <<%s>>: El fichero ya existe\n", final);
-				//printf("DEBUG: camino = %s y mierda = %d\n", camino, mierda);
-				senalizar_semaforo(mutex, 0);
-				return (-1);
+				/* Existe el camino, buscamos que no exista la entrada */
+				p_inodo_dir = 0;
+				p_inodo = 0;
+				p_entrada = 0;
+				//printf(" - Parámetros de buscar la entrada: camino = %s, p_inodo_dir = %d, p_inodo = %d, p_entrada = %d\n", camino, p_inodo_dir, p_inodo, p_entrada);
+				int mierda = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada);
+				//printf(" - mierda = %d\n", mierda);
+				/* ALERTA, ANTES mierda <= 0 */
+				if (mierda < 0) {
+					
+					struct inodo in;
+					
+					/* Es del tipo DIRECTORIO */
+					if (camino[longitud-1] == '/') {
+						in.tipo = DIRECTORIO;
+						//printf("  - Tipo inodo DIRECTORIO\n");
+					}
+					/* Es del tipo FICHERO */
+					else {
+						in.tipo = FICHERO;
+						//printf("  - Tipo inodo FICHERO\n");
+					}
+					
+					in.t_bytes = 0;
+					in.n_bloques = 0;
+					in.f_creacion = time(NULL);
+					in.f_modificacion = time(NULL);
+					int inodo_r = reservar_inodo(in);
+					
+					/* FINALMENTE ESCRIBIMOS EL FICHERO/DIRECTORIO */
+					struct STAT estado;
+					if (mi_stat_f(p_inodo_dir, &estado) < 0) {
+						printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer el estado del inodo %d.\n", camino, p_inodo_dir);
+						devolver = -1;
+					}
+					else {
+					
+						int n_entradas = (estado.t_bytes/sizeof(struct entrada));
+						struct entrada ent[n_entradas+1];
+						
+						//printf("  - n_entradas: %d // n_entradas+1: %d // final: %s\n", n_entradas, n_entradas+1, final);
+						
+						/* ESTE IF SOBRA, QUITARLO!!! */
+						if (n_entradas > 0) {
+						
+							if (mi_read_f(p_inodo_dir, &ent, 0, estado.t_bytes) < 0) {
+								printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer las %d entradas del inodo %d.\n ", camino, n_entradas, p_inodo_dir);
+								devolver = -1;
+							}
+						}
+						
+						ent[n_entradas].inodo = inodo_r;
+						strcpy(ent[n_entradas].nombre, final);
+						
+						/* Introducimos los datos en la entrada */		
+						
+						//printf(" - ent[%d].inodo = %d // inodo_r = %d\n", n_entradas, ent[n_entradas].inodo, inodo_r);
+						//printf(" - ent[%d].nombre = %s   // camino = %s\n", n_entradas, ent[n_entradas].nombre, camino);
+						
+						/* Escribimos la entrada */
+						if (mi_write_f(p_inodo_dir, &ent, 0, ((n_entradas+1)*sizeof(struct entrada))) < 0) {
+							printf("ERROR (directorios.c -> mi_creat(%s)): Error al escribir la entrada nueva.\n", camino);
+							devolver = -1;
+						}
+						else {
+							devolver = 1;
+						}
+						//printf(" - Entrada escrita con: p_inodo_dir = %d, y tamaño = %d\n", p_inodo_dir, (n_entradas+1)*sizeof(struct entrada));
+					}
+				}
+				/* Existe la entrada, no podemos crearla */
+				else {
+					printf("mi_creat: no se puede crear la entrada <<%s>>: El fichero ya existe\n", final);
+					//printf("DEBUG: camino = %s y mierda = %d\n", camino, mierda);
+					devolver = -1;
+				}
 			}
 		}
 	}
 	
 	senalizar_semaforo(mutex, 0);
-	return (1); /* Ejecución terminada con éxito */
+	return (devolver); /* Ejecución terminada con éxito */
 }
 
 
@@ -360,11 +360,10 @@ int mi_creat(const char *camino) {
 int mi_unlink(const char *camino) {
 
 	esperar_semaforo(mutex, 0, 0);
-
-	/* Misma filosofía que mi_creat */
-	//printf("\n\n --- INICIO: mi_unlink(%s) ------------------------------\n", camino);
 	
 	int longitud = strlen(camino);
+	int devolver = -1;	
+	int n_entradas = 0;
 	
 	if ((longitud > 0) && (strcmp(camino, "/") != 0)) {
 		
@@ -378,8 +377,7 @@ int mi_unlink(const char *camino) {
 		if (cacuna < 0) {
 			/* No existe la entrada, ERROR */
 			printf("mi_unlink: no se puede borrar <<%s>>: No existe el fichero ó directorio\n", camino);
-			senalizar_semaforo(mutex, 0);
-			return (-1);
+			devolver = -1;
 		}
 		else {
 		
@@ -387,90 +385,88 @@ int mi_unlink(const char *camino) {
 			struct STAT estado;
 			if (mi_stat_f(p_inodo_dir, &estado) < 0) {
 				printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer el estado del inodo %d.\n", camino, p_inodo_dir);
-				senalizar_semaforo(mutex, 0);
-				return (-1);
+				devolver = -1;
 			}
 			
-			int n_entradas = (estado.t_bytes/sizeof(struct entrada));
-			struct entrada ent[n_entradas];
-			if (mi_read_f(p_inodo_dir, &ent, 0, ((n_entradas)*sizeof(struct entrada))) < 0) {
-				printf("ERROR (directorios.c -> mi_unlink(%s)): Error al leer las %d entradas del inodo %d.\n", camino, ((n_entradas)*sizeof(struct inodo)), p_inodo_dir);
-				senalizar_semaforo(mutex, 0);
-				return (-1);
-			}
-			
-			//printf("  - n_entradas: %d // n_entradas-1: %d\n", n_entradas, n_entradas-1);
-			//printf("  - p_entrada: %d // ent[%d].nombre = %s, ent[%d].inodo = %d\n", p_entrada, p_entrada, ent[p_entrada].nombre, p_entrada, ent[p_entrada].inodo);
-			
-			if (estado.t_bytes > sizeof(struct entrada)) {
-				/* Guardamos la última entrada y re-localizamos */
-				//printf("Nombre-1 = %s // inodo-1 = %d // n_entradas = %d\n", ent[n_entradas-1].nombre, ent[n_entradas-1].inodo, n_entradas);
-				struct entrada pivote;
-				memset(pivote.nombre, '\0', TAM_NOMDIR);
-				strcpy(pivote.nombre, ent[n_entradas-1].nombre);
-				
-				pivote.inodo = ent[n_entradas-1].inodo;
-				strcpy(ent[p_entrada].nombre, pivote.nombre);
-				ent[p_entrada].inodo = pivote.inodo;
-				
-				//printf("  - Pivote: nombre = %s // inodo = %d\n", pivote.nombre, pivote.inodo);
-				//printf("  - Vamos a escribir en %d y %d bytes.\n", p_inodo_dir, ((n_entradas-1)*sizeof(struct entrada)));
-				
-				if (mi_write_f(p_inodo_dir, &ent, 0, ((n_entradas-1)*sizeof(struct entrada))) < 0) {
-					printf("ERROR (directorios.c -> mi_unlink(%s)): Error al escribir la nueva localización de la entrada en la posición %d\n", camino, p_entrada);
-					senalizar_semaforo(mutex, 0);
-					return (-1);
-				}
-			}
-			
-			/* Actualizamos el inodo del directorio donde estaba el fichero/directorio borrado. 
-			 * Ocurre cuando sólo hay una entrada en dicho directorio y no se actualiza mediante mi_write_f
-			 */
 			else {
-				struct inodo dir;
-				if (leer_inodo(&dir, p_inodo_dir) < 0) {
-					printf("ERROR (directorios.c -> mi_unlink(%s)): Error al leer el inodo %d para actualizarlo.\n", camino, p_inodo_dir);
-					senalizar_semaforo(mutex, 0);
-					return (-1);
+				n_entradas = (estado.t_bytes/sizeof(struct entrada));
+				struct entrada ent[n_entradas];
+				if (mi_read_f(p_inodo_dir, &ent, 0, ((n_entradas)*sizeof(struct entrada))) < 0) {
+					printf("ERROR (directorios.c -> mi_unlink(%s)): Error al leer las %d entradas del inodo %d.\n", camino, ((n_entradas)*sizeof(struct inodo)), p_inodo_dir);
+					devolver = -1;
 				}
 				
-				dir.t_bytes -= 64;
-				dir.n_bloques -= 1;
-				dir.f_modificacion = time(NULL);
-				
-				if (escribir_inodo(dir, p_inodo_dir) < 0) {
-					printf("ERROR (directorios.c -> mi_unlink(%s)): Error al escribir el inodo %d para actualizarlo.\n", camino, p_inodo_dir);
-					senalizar_semaforo(mutex, 0);
-					return (-1);
+				else {
+					if (estado.t_bytes > sizeof(struct entrada)) {
+						/* Guardamos la última entrada y re-localizamos */
+						//printf("Nombre-1 = %s // inodo-1 = %d // n_entradas = %d\n", ent[n_entradas-1].nombre, ent[n_entradas-1].inodo, n_entradas);
+						struct entrada pivote;
+						memset(pivote.nombre, '\0', TAM_NOMDIR);
+						strcpy(pivote.nombre, ent[n_entradas-1].nombre);
+						
+						pivote.inodo = ent[n_entradas-1].inodo;
+						strcpy(ent[p_entrada].nombre, pivote.nombre);
+						ent[p_entrada].inodo = pivote.inodo;
+						
+						//printf("  - Pivote: nombre = %s // inodo = %d\n", pivote.nombre, pivote.inodo);
+						//printf("  - Vamos a escribir en %d y %d bytes.\n", p_inodo_dir, ((n_entradas-1)*sizeof(struct entrada)));
+						
+						if (mi_write_f(p_inodo_dir, &ent, 0, ((n_entradas-1)*sizeof(struct entrada))) < 0) {
+							printf("ERROR (directorios.c -> mi_unlink(%s)): Error al escribir la nueva localización de la entrada en la posición %d\n", camino, p_entrada);
+							devolver = -1;
+						}
+					}
+					
+					/* Actualizamos el inodo del directorio donde estaba el fichero/directorio borrado. 
+					 * Ocurre cuando sólo hay una entrada en dicho directorio y no se actualiza mediante mi_write_f
+					 */
+					else {
+						struct inodo dir;
+						if (leer_inodo(&dir, p_inodo_dir) < 0) {
+							printf("ERROR (directorios.c -> mi_unlink(%s)): Error al leer el inodo %d para actualizarlo.\n", camino, p_inodo_dir);
+							devolver = -1;
+						}
+						else {
+							
+							dir.t_bytes -= 64;
+							dir.n_bloques -= 1;
+							dir.f_modificacion = time(NULL);
+							
+							if (escribir_inodo(dir, p_inodo_dir) < 0) {
+								printf("ERROR (directorios.c -> mi_unlink(%s)): Error al escribir el inodo %d para actualizarlo.\n", camino, p_inodo_dir);
+								devolver = -1;
+							}
+						}
+					}
 				}
 			}
-		
-			//printf(" - P_INODO vale %d.\n", p_inodo);
-			
-			/* PRUEBAS 
-			struct inodo in;
-			leer_inodo(&in, p_inodo);*/
-			
-			//printf(" - in.n_asignados = %d // in.t_bytes = %d\n", in.n_bloques, in.t_bytes);
 			
 			/* Debemos liberar el inodo con 64 bytes menos de los que tiene */
 			if (liberar_inodo(p_inodo) < 0) {
 				printf("ERROR (directorios.c -> mi_unlink(%s)): Error al liberar el inodo %d.\n", camino, p_inodo);
-				senalizar_semaforo(mutex, 0);
-				return (-1);
+				devolver = -1;
 			}
+			else {
 			
-			/* Truncamos el inodo que contiene p_inodo */
-			if (mi_truncar_f(p_inodo_dir, ((n_entradas-1)*sizeof(struct entrada))) < 0) {
-				printf("ERROR (directorios.c -> mi_unlink(%s)): Error al truncar el inodo %d en %d bytes.\n", p_inodo_dir, ((n_entradas-1)*sizeof(struct entrada)));
-				senalizar_semaforo(mutex, 0);
-				return (-1);
+				//printf("VAMOS A TRUNCAR\n");
+				/* Truncamos el inodo que contiene p_inodo */
+				if (n_entradas > 0) {
+					n_entradas--;
+				}
+				
+				if (mi_truncar_f(p_inodo_dir, (n_entradas*sizeof(struct entrada))) < 0) {
+					printf("ERROR (directorios.c -> mi_unlink(%s)): Error al truncar el inodo %d en %d bytes.\n", p_inodo_dir, n_entradas*sizeof(struct entrada));
+					devolver = -1;
+				}
+				else {
+					devolver = 1;
+				}
 			}
 		}
 	}
 	
 	senalizar_semaforo(mutex, 0);
-	return (1); /* Ejecución terminada con éxito */
+	return (devolver);
 }
 
 
@@ -554,6 +550,7 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
 
 	esperar_semaforo(mutex, 0, 0);
 
+	int devolver = -1;
 	int longitud = strlen(camino);
 	
 	if (longitud > 0) {
@@ -567,21 +564,23 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
 		if (cacuna < 0) {
 			/* No existe el fichero/directorio */
 			printf("mi_stat: no se puede mostrar el estado de <<%s>>: No existe el fichero ó directorio\n", camino);
-			senalizar_semaforo(mutex, 0);
-			return (-1);
+			devolver = -1;
 		}
 		else {
 		
 			if (mi_stat_f(p_inodo, p_stat) < 0) {
 				printf("ERROR (directorios.c -> mi_creat(%s)): Error al leer el estado del inodo %d.\n", camino, p_inodo_dir);
-				senalizar_semaforo(mutex, 0);
-				return (-1);
+				devolver = -1;
 			}
-			
-			senalizar_semaforo(mutex, 0);
-			return (1); /* Ejecución finalizada con éxito */
+			else {
+				//printf("éxito en mi_stat %s\n", camino);
+				devolver = 1; /* Ejecución finalizada con éxito */
+			}
 		}
 	}
+	
+	senalizar_semaforo(mutex, 0);
+	return (devolver);
 }
 
 
@@ -589,7 +588,8 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
 int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
 
 	esperar_semaforo(mutex, 0, 0);
-
+	
+	int devolver = -1;
 	int longitud = strlen(camino);
 	
 	if (longitud > 0) {
@@ -602,8 +602,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
 		
 		if (cacuna < 0) {
 			printf("mi_write: no se puede escribir el búfer en <<%s>>: No existe el fichero ó directorio\n", camino);
-			senalizar_semaforo(mutex, 0);
-			return (-1);
+			devolver = -1;
 		}
 		else {
 		
@@ -611,14 +610,16 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
 		
 			if (mi_write_f(p_inodo, buf, offset, nbytes) < 0) {
 				printf("ERROR (directorios.c -> mi_write(%s, buf, %d, %d)): Error al ejecutar mi_write_f(%d, buf, %d, %d).\n", camino, offset, nbytes, p_inodo, offset, nbytes);
-				senalizar_semaforo(mutex, 0);
-				return (-1);
+				devolver = -1;
 			}
-			
-			senalizar_semaforo(mutex, 0);
-			return (1); /* Ejecución finalizada con éxito */
+			else {
+				devolver = 1; /* Ejecución finalizada con éxito */
+			}
 		}
 	}
+	
+	senalizar_semaforo(mutex, 0);
+	return (devolver);
 }
 
 

@@ -13,15 +13,17 @@
 #define N_LOGS 100
 #define N_LINEA 50
 
-static int acabados;
+int acabados = 0;
 
 
 
 void reaper() {
 
-	while(wait3(NULL,WNOHANG,NULL) > 0) {
+	while(wait3(NULL, WNOHANG, NULL) > 0) {
 		acabados++;
 	}
+	
+	printf("Han acabado %d / %d\n", acabados, N_PROCESOS);
 }
 
 
@@ -43,18 +45,16 @@ int proceso (int n) {
 	else {
 	
 		sprintf(linea, "Inicio log proceso PID %d\n", getpid());
-		printf("Fichero <<%s>> creado! // %s\n", nombre, linea);
+		printf("Fichero <<%s>> creado! // %d // %s ", nombre, strlen(linea), linea);
 		
-		/* PRUEBAS */
-		unsigned int p_inodo_dir, p_inodo, p_entrada;
-		p_inodo_dir = 0;
-		int res = buscar_entrada(nombre, &p_inodo_dir, &p_inodo, &p_entrada);
-		
-		//printf("Linea: %s, RES: %d, p_inodo_dir = %d, p_inodo = %d, p_entrada = %d.\n", linea, res, p_inodo_dir, p_inodo, p_entrada);
-		
+		printf("strlen(linea): %d\n	", strlen(linea));
 		
 		if (mi_write(nombre, linea, 0, strlen(linea)) < 0) {
-			printf("ERROR (simulacion.c): Error al ejecutar mi_write(%s, &s, 0, %d).\n", nombre, linea, strlen(linea));
+			char buffer[10000];
+			memset(buffer, '\0', 10000);
+			mi_dir("/", buffer);
+			printf("%s", buffer);
+			printf("ERROR PERRO (simulacion.c): Error al ejecutar mi_write(%s, &s, 0, %d).\n", nombre, linea, strlen(linea));
 			return (-1);
 		}
 		
@@ -62,24 +62,22 @@ int proceso (int n) {
 		struct tm *p_tiempo;
 		time_t tiempo;
 		struct STAT estado;
+		
 		int i;
 		for (i = 0; i < N_LOGS; i++) {
 			tiempo = time(NULL);
 			p_tiempo = localtime(&tiempo);
 			sprintf(linea, "  %d:%d:%d Línea número %d\n", p_tiempo->tm_hour, p_tiempo->tm_min, p_tiempo->tm_sec, i);
 						
-			//printf("%s\n", linea);
-						
 			if (mi_stat(nombre, &estado) < 0) {
 				printf("ERROR (simulacion.c): Error al ejecutar mi_stat(%s, &estado) 1.\n", nombre);
 				return (-1);
 			}
-			
-			//printf("estado.t_bytes = %d\n", estado.t_bytes);
-			
-			if (mi_write(nombre, linea, estado.t_bytes, strlen(linea)) < 0) {
-				printf("ERROR (simulacion.c): Error al ejecutar mi_write(%s, linea, %d, %d) 1.\n", nombre, estado.t_bytes, strlen(linea));
-				return (-1);
+			else {
+				if (mi_write(nombre, linea, estado.t_bytes, strlen(linea)) < 0) {
+					printf("ERROR (simulacion.c): Error al ejecutar mi_write(%s, linea, %d, %d) 1.\n", nombre, estado.t_bytes, strlen(linea));
+					return (-1);
+				}
 			}
 			
 			usleep(100000); /* Cada línea debe esperar 0,1 segundos */
@@ -93,10 +91,11 @@ int proceso (int n) {
 				printf("ERROR (simulacion.c): Error al ejecutar mi_stat(%s, &estado) 2.\n", nombre);
 				return (-1);
 		}
-		
-		if (mi_write(nombre, linea, estado.t_bytes, strlen(linea)) < 0) {
-				printf("ERROR (simulacion.c): Error al ejecutar mi_write(%s, %s, %d, %d) 2.\n", nombre, linea,  estado.t_bytes, strlen(linea));
-				return (-1);
+		else {
+			if (mi_write(nombre, linea, estado.t_bytes, strlen(linea)) < 0) {
+					printf("ERROR (simulacion.c): Error al ejecutar mi_write(%s, %s, %d, %d) 2.\n", nombre, linea,  estado.t_bytes, strlen(linea));
+					return (-1);
+			}
 		}
 	}
 	
@@ -115,8 +114,8 @@ int vaciar() {
 		sprintf(nombre,"/proceso-%d.dat",i);
 
 		if (mi_unlink(nombre) < 0) {
-			printf("ERROR (simulacion.c): Error al ejecutar mi_unlink(%s).\n", nombre);
-			return (-1);
+			printf("El proceso %s no existe.\n", nombre);
+			//return (-1);
 		}
 		else {
 			printf("%s eliminado!\n", nombre);
@@ -131,12 +130,14 @@ int main (int argc,char **argv) {
 	if (argc == 2) {
 
 		signal(SIGCHLD,reaper);
-		acabados = 0;		
 	
 		mount(argv[1]);
 		
-		
 		vaciar(); /* METER CONTROL DE ERRORES */
+		char buffer[10000];
+		memset(buffer, '\0', 10000);
+		mi_dir("/", buffer);
+		printf("%s", buffer);
 			
 			int i;
 			for (i = 0; i < N_PROCESOS; i++) {
