@@ -68,6 +68,7 @@ struct inodo
  */
 int leerSB();
 
+
 /*
  * Funciones para calcular el tamaño en bloques.
  */

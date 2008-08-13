@@ -43,21 +43,16 @@ int proceso (int n) {
 		return (-1);
 	}
 	else {
-	
-		//prt_stat_f(0);	
-		//prt_stat_f(1);
 		
 		sprintf(linea, "Inicio log proceso PID %d\n", getpid());
 		printf("Fichero <<%s>> creado! // %d // %s ", nombre, strlen(linea), linea);
-		
-		//printf("strlen(linea): %d\n	", strlen(linea));
 		
 		if (mi_write(nombre, linea, 0, strlen(linea)) < 0) {
 			char buffer[10000];
 			memset(buffer, '\0', 10000);
 			mi_dir("/", buffer);
 			printf("%s", buffer);
-			printf("ERROR PERRO (simulacion.c): Error al ejecutar mi_write(%s, &s, 0, %d).\n", nombre, linea, strlen(linea));
+			printf("ERROR (simulacion.c): Error al ejecutar mi_write(%s, &s, 0, %d).\n", nombre, linea, strlen(linea));
 			return (-1);
 		}
 		
@@ -68,6 +63,7 @@ int proceso (int n) {
 		
 		int i;
 		for (i = 0; i < N_LOGS; i++) {
+		
 			tiempo = time(NULL);
 			p_tiempo = localtime(&tiempo);
 			sprintf(linea, "  %d:%d:%d Línea número %d\n", p_tiempo->tm_hour, p_tiempo->tm_min, p_tiempo->tm_sec, i);
@@ -106,7 +102,7 @@ int proceso (int n) {
 }
 
 
-/* ADAPTARLA PARA QUE BORRE LO QUE TOCA!!! */
+
 int vaciar() {
 	
 	char nombre[N_LINEA];
@@ -118,7 +114,6 @@ int vaciar() {
 
 		if (mi_unlink(nombre) < 0) {
 			printf("El proceso %s no existe.\n", nombre);
-			//return (-1);
 		}
 		else {
 			printf("%s eliminado!\n", nombre);
@@ -152,35 +147,32 @@ int main (int argc,char **argv) {
 			initMB(SB.n_bloques);
 			initAI(SB.n_bloques);
 		}
-		
-		
-		
-		//prt_stat_f(0);
 			
-			int i;
-			for (i = 0; i < N_PROCESOS; i++) {
 			
-				int hilo = fork();
-				if (hilo == 0) {
-				
-					if (proceso(i) < 0) {
-						printf("ERROR (simulacion.c): Error al crear el proceso %d.\n", i);
-						return (-1);
-					}
-					exit(0);
-				}
-				else if (hilo < 0) {
-					i--;
-					printf("Llamamos al reaper, hilo = %d\n", hilo);
-					reaper();
-				}
-				
-				sleep(1);		
-			}
+		int i;
+		for (i = 0; i < N_PROCESOS; i++) {
 		
-			while (acabados < N_PROCESOS) {
-				pause();
+			int hilo = fork();
+			if (hilo == 0) {
+			
+				if (proceso(i) < 0) {
+					printf("ERROR (simulacion.c): Error al crear el proceso %d.\n", i);
+					return (-1);
+				}
+				exit(0);
 			}
+			else if (hilo < 0) {
+				i--;
+				printf("Llamamos al reaper, hilo = %d\n", hilo);
+				reaper();
+			}
+			
+			sleep(1);		
+		}
+	
+		while (acabados < N_PROCESOS) {
+			pause();
+		}
 			
 		unmount(argv[1]);
 	

@@ -22,16 +22,29 @@ struct entrada {
 };
 
 
+/*
+ * Funciones para montar el sistema de ficheros y inicializar los semáforos
+ * para la simulación.
+ */
 int mount(const char *nombre);
 
 int unmount(const char *nombre);
 
+
+/*
+ * Funciones de soporte para buscar entrada y extraer directorios/caminos
+ */
 int extraer_camino(const char *camino, char *inicial, char *final);
 
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada);
 
 int extraer_directorio(const char *camino, char *inicial, char *nombre);
 
+
+/*
+ * Funciones para crear, borrar, listar, escribir y conocer el estado
+ * de las entradas.
+ */
 int mi_creat(const char *camino);
 
 int mi_unlink(const char *camino);
