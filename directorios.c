@@ -347,8 +347,8 @@ int mi_unlink(const char *camino) {
 				else {
 				
 					if (estado.t_bytes > sizeof(struct entrada)) {
+					
 						/* Guardamos la última entrada y re-localizamos */
-						//printf("Nombre-1 = %s // inodo-1 = %d // n_entradas = %d\n", ent[n_entradas-1].nombre, ent[n_entradas-1].inodo, n_entradas);
 						struct entrada pivote;
 						memset(pivote.nombre, '\0', TAM_NOMDIR);
 						strcpy(pivote.nombre, ent[n_entradas-1].nombre);
@@ -409,6 +409,10 @@ int mi_unlink(const char *camino) {
 				}
 			}
 		}
+	}
+	else if (strcmp(camino, "/") == 0) {
+		printf("mi_unlink: Error al borrar el directorio <</>>: No se puede eliminar el directorio raíz\n");
+		devolver = -1;
 	}
 	
 	senalizar_semaforo(mutex, 0);
