@@ -8,7 +8,7 @@ CC = gcc
 OBJECTS = bloques.o ficheros_basico.o ficheros.o directorios.o semaforos.o
 
 #FUNCIÓN PRINCIPAL:
-total	:	mi_mkfs mi_cat mi_ls mi_rm simulacion
+total	:	mi_mkfs mi_cat mi_ls mi_rm simulacion prueba
 
 mi_mkfs	:	mi_mkfs.c  $(OBJECTS)
 			$(CC) -o mi_mkfs mi_mkfs.c $(OBJECTS)
@@ -24,6 +24,9 @@ mi_rm	:	mi_rm.c $(OBJECTS)
 			
 simulacion	:	simulacion.c $(OBJECTS)
 				$(CC) -o simulacion simulacion.c $(OBJECTS)
+				
+prueba	:	prueba.c $(OBJECTS)
+			$(CC) -o prueba prueba.c $(OBJECTS)
             
 
 #FICHEROS ADICIONALES:                
@@ -44,7 +47,7 @@ semaforos	:	semaforos.c semaforos.h
 				
 
 clean: 
-	rm mi_mkfs mi_cat mi_ls mi_rm simulacion \
+	rm mi_mkfs mi_cat mi_ls mi_rm simulacion prueba \
 		disco.imagen $(OBJECTS)
 
 

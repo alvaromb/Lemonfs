@@ -703,7 +703,7 @@ int liberar_bloques_indirectos(unsigned int pos_inicial, unsigned int nivel, uns
 			
 			/* Si hemos liberado 256 bloques, liberamos el bloque de punteros */
 			if ((n_max == nivel) || (v_devuelto == TP)) {
-				if ((bufferp[i] == 0) || (liberar_bloque(bufferp[i]) < 0)) {
+				if ((bufferp[i] != 0) && (liberar_bloque(bufferp[i]) < 0)) {
 					printf("ERROR (ficheros_basico.c -> liberar_bloques_indirectos(%d, %d, %d, %d)): Error al liberar el bloque %d en el caso general\n", pos_inicial, nivel, n_max, nbloque, pos_inicial);
 					return (-1);
 				}

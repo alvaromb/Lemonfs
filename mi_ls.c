@@ -11,8 +11,8 @@ int main(int argc, char **argv) {
 		
 		mount(argv[1]);
 		
-		char buffer[TB*6]; /* Tamaño aleatorio */
-		memset(buffer, '\0', (TB*6));
+		char buffer[TB*60]; /* Tamaño aleatorio */
+		memset(buffer, '\0', (TB*60));
 		
 		int entradas = mi_dir(argv[2], buffer);
 		if (entradas < 0) {

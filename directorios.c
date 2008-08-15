@@ -433,16 +433,23 @@ int mi_dir(const char *camino, char *buffer) {
 			unsigned int p_inodo;
 			unsigned int p_entrada;
 			
-			int cacuna = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada);
-			
-			if (cacuna < 0) {
+			if (buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada) < 0) {
 				printf("mi_dir: no se puede listar <<%s>>: No existe el directorio\n", camino);
 				return (-1);
 			}
 			else {
 			
 				struct STAT estado;
-				if (mi_stat_f(p_inodo_dir, &estado) < 0) {
+				
+				int inodo;
+				if (strcmp(camino, "/") == 0) {
+					inodo = p_inodo_dir;
+				}
+				else {
+					inodo = p_inodo;
+				}
+				
+				if (mi_stat_f(inodo, &estado) < 0) {
 					printf("ERROR (directorios.c -> mi_dir(%s, buffer)): Error al leer el estado del inodo %d.\n", camino, p_inodo_dir);
 					return (-1);
 				}
@@ -452,7 +459,7 @@ int mi_dir(const char *camino, char *buffer) {
 				if (n_entradas > 0) {
 					
 					struct entrada ent[n_entradas];
-					if (mi_read_f(p_inodo_dir, &ent, 0, estado.t_bytes) < 0) {
+					if (mi_read_f(inodo, &ent, 0, estado.t_bytes) < 0) {
 						printf("ERROR (directorios.c -> mi_dir(%s, buffer)): Error al leer las %d entradas del inodo %d.\n", camino, n_entradas, p_inodo);
 						return (-1);
 					}
